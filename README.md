@@ -12,6 +12,8 @@
 Material used as part of the [CSAMA
 2017](http://www.huber.embl.de/csama2017/) course.
 
+Read [slides online](https://rawgit.com/lgatto/bioc-ms-prot/master/slides.html#).
+
 ## License
 
 This material, unless otherwise stated, has been adapted from our is
