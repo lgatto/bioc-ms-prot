@@ -951,18 +951,25 @@ msset <- quantify(msexp, method = "max", reporters = iTRAQ4)
 The figure below give a schematics of an `MSnSet` instance and the
 relation between the assay data and the respective feature and sample
 metadata, accessible respectively with the `exprs`, `fData` and
-`pData` functions.
+`pData` functions. 
 
 ![MSnSet structure](./Figures/msnset.png)
+
+New columns can be added to the metadata slots.
+
+```{r msnsetslots}
+exprs(msset)
+pData(msset)
+pData(msset)$groups <- rep(c("Treat", "Cond"), each = 2)
+pData(msset)
+```
 
 Another useful slot is `processingData`, accessed with
 `processingData(.)`, that records all the processing that objects have
 undergone since their creation.
 
 
-```{r msnsetslots}
-exprs(msset)
-pData(msset)
+```{r msnsetslots2}
 processingData(msset)
 ```
 
@@ -1033,6 +1040,18 @@ For raw data processing look at `MSnbase`'s `clean`, `smooth`,
 `pickPeaks`, `removePeaks` and `trimMz` for `MSnExp` and spectra
 processing methods.
 
+As an illustration, we show the `pickPeaks` function on the
+`itraqdata` data.
+
+```{r}
+data(itraqdata)
+plot(itraqdata[[10]], full = TRUE) +
+    coord_cartesian(xlim = c(915, 925))
+itraqdata2 <- pickPeaks(itraqdata)
+plot(itraqdata2[[10]], full = TRUE, w1 = 0.05) +
+    coord_cartesian(xlim = c(915, 925))
+```
+
 The `r Biocpkg("MALDIquant")`and `r Biocpkg("xcms")` packages also
 features a wide range of raw data processing methods on their own ad
 hoc data instance types.
@@ -1080,37 +1099,96 @@ prt <- combineFeatures(qnt.crct.nrm, groupBy = gb, fun = "median")
 processingData(prt)
 ```
 
+### Missing values {-}
+
 Finally, proteomics data analysis is generally hampered by missing
 values. Missing data imputation is a sensitive operation whose success
 will be guided by many factors, such as degree and (non-)random nature
-of the missingness.
+of the missingness. 
 
-Below, missing values are randomly assigned to our test data and
-visualised on a heatmap.
+Below, we load an `MSnSet` with missing values, count the number
+missing and non-missing values.
 
 ```{r impute0}
-set.seed(1)
-qnt0 <- qnt
-exprs(qnt0)[sample(prod(dim(qnt0)), 10)] <- NA
-table(is.na(qnt0))
-image(qnt0)
+data(naset)
+table(is.na(naset))
 ```
 
-Missing value in `MSnSet` instances can be filtered out and imputed
-using the `filterNA` and `impute` functions.
+The `naplot` figure will reorder cells within the data matrix so that
+the experiments and features with many missing values will be grouped
+towards the top and right of the heatmap, and barplots at the top and
+right summarise the number of missing values in the respective samples
+(column) and rows (rows).
+
+```{r}
+naplot(naset)
+```
+
+The importance of missing values in a dataset will depend on the
+quantitation technology employed. Label-free quantitation in
+particular can suffer from a very high number of missing values.
+
+Missing value in `MSnSet` instances can be filtered out with the
+`filterNA` functions. By default, it removes features that contain at
+least `NA` value.
 
 ```{r filterNA}
 ## remove features with missing values
-qnt00 <- filterNA(qnt0)
-dim(qnt00)
-any(is.na(qnt00))
+tmp <- filterNA(naset)
+processingData(tmp)
 ```
+
+
+It is of course possible to impute missing values (`?impute`). This is
+however not a straightforward thing, as is likely to dramatically fail
+when a high proportion of data is missing (10s of
+%)^[Note that when using `r Biocpkg("limma")` for instance, downstream analyses can handle missing values. Still, it is recommended to explore missingness as part of the exploratory data analysis.]. But
+also, there are two types of mechanisms resulting in missing values in
+LC/MSMS experiments.
+
+* Missing values resulting from absence of detection of a feature,
+  despite ions being present at detectable concentrations.  For
+  example in the case of ion suppression or as a result from the
+  stochastic, data-dependent nature of the MS acquisition
+  method. These missing value are expected to be randomly distributed
+  in the data and are defined as **missing at random** (MAR) or
+  **missing completely at random** (MCAR).
+
+* Biologically relevant missing values, resulting from the *absence*
+  or the low abundance of ions (below the limit of detection of the
+  instrument). These missing values are not expected to be randomly
+  distributed in the data and are defined as **missing not at random**
+  (MNAR).
+
+```{r naheatmap, echo=FALSE}
+x <- impute(naset, "zero")
+exprs(x)[exprs(x) != 0] <- 1
+library("gplots")
+heatmap.2(exprs(x), col = c("lightgray", "black"),
+          scale = "none", dendrogram = "none",
+          trace = "none", keysize = 0.5, key = FALSE,
+          RowSideColors = ifelse(fData(x)$randna, "orange", "brown"),
+          ColSideColors = rep(c("steelblue", "darkolivegreen"), each = 8))
+```
+
+Different imputation methods are more appropriate to different classes
+of missing values (as documented in this
+[paper](http://pubs.acs.org/doi/abs/10.1021/acs.jproteome.5b00981)). Values
+missing at random, and those missing not at random should be imputed
+with different methods.
+
+![RSR KNN and MinDet imputation](./Figures/imp-sim.png)
+
+Generally, it is recommended to use **hot deck** methods (nearest
+neighbour (**left**), maximum likelihood, ...) when data are missing
+at random.Conversely, MNAR features should ideally be imputed with a
+**left-censor** (minimum value (**right**), but not zero, ...) method.
+
 
 ```{r impute}
 ## impute missing values using knn imputation
-qnt.imp <- impute(qnt0, method = "knn")
-dim(qnt.imp)
-any(is.na(qnt.imp))
+tmp <- impute(naset, method = "knn")
+processingData(tmp)
 ```
 
 There are various methods to perform data imputation, as described in
@@ -1123,8 +1201,9 @@ statistical analysis of data. Several packages provide dedicated
 resources for proteomics data:
 
 - `r Biocpkg("MSstats")`: A set of tools for statistical relative
-  protein significance analysis in DDA, SRM and DIA experiments. Data
-  stored in `data.frame` or `MSnSet` objects can be used as input.
+  protein significance analysis in DDA, SRM and Data independent
+  acquisition (DIA) experiments. Data stored in `data.frame` or
+  `MSnSet` objects can be used as input.
 
 - `r Biocpkg("msmsTests")`: Statistical tests for label-free LC-MS/MS
   data by spectral counts, to discover differentially expressed
@@ -1214,18 +1293,47 @@ as(res, "data.frame")
 Data from the [Human Protein Atlas](http://www.proteinatlas.org/) is
 available via the `r Biocpkg("hpar")` package.
 
-# Other relevant packages/pipelines
+# More information
+
+## References and resources
+
+* [Visualisation of proteomics data using R and Bioconductor](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4510819/)
+* [Using R and Bioconductor for proteomics data analysis](http://arxiv.org/pdf/1305.6559v1.pdf)
+* `RforProteomics`: http://bioconductor.org/packages/RforProteomics
+
+## Other relevant packages/pipelines
 
 - Analysis of post translational modification with `r Biocpkg("isobar")`.
-- Analysis of label-free data from a Synapt G2 (including ion
-  mobility) with `r Biocpkg("synapter")`.
+- Processing and analysis or isobaric tagging mass spectrometry with
+  `r Biocpkg("isobar")` and `r Biocpkg("MSnbase")`.
 - Analysis of spatial proteomics data with `r Biocpkg("pRoloc")`.
-- Analysis of MALDI data with the `r CRANpkg("MALDIquant")` package.
+- Analysis of MALDI data with the `r Biocpkg("MALDIquant")` package.
 - Access to the Proteomics Standard Initiative Common QUery InterfaCe
   with the `r Biocpkg("PSICQUIC")` package.
+- `r Biocpkg("Cardinal")`: A mass spectrometry imaging toolbox for
+  statistical analysis.
+- `r Biocpkg("MSnID")`: Utilities for Exploration and Assessment of
+  Confidence of LC-MSn Proteomics Identifications.
+- `r CRANpkg("protViz") `: Visualising and Analysing Mass Spectrometry
+  Related Data in Proteomics
+- `r CRANpkg("aLFQ")`: Estimating Absolute Protein Quantities from
+  Label-Free LC-MS/MS Proteomics Data.
+- `r CRANpkg("protiq")`: Protein (identification and) quantification
+  based on peptide evidence.  
+- `r Biocpkg("MSstats")`: Protein Significance Analysis in DDA, SRM
+  and DIA for Label-free or Label-based Proteomics Experiments
 
-Additional relevant packages are described in the `r Biocannopkg("RforProteomics")` vignettes.
 
+### Data Independent Acquisition
+
+- Analysis of label-free data from a Synapt G2 (including ion
+  mobility) with `r Biocpkg("synapter")`.
+- `r Biocpkg("SWATH2stats")`: Transform and Filter SWATH Data for
+  Statistical Packages and
+- `r Biocpkg("specL")`: Prepare Peptide Spectrum Matches for Use in
+  Targeted Proteomics
+- `r Biocpkg("SwathXtend")`: SWATH extended library generation and
+  statistical data analysis
 
 # Session Information
 
