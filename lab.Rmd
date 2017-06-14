@@ -412,6 +412,9 @@ MSGFgui()
 
 ![The `r Biocpkg("MSGFgui")` interface](./Figures/MSGFgui.png)
 
+The `r Biocpkg("rTANDEM")` package can be used to perform a search
+with *XTandem* software.
+
 # Analysing search results
 
 The `r Biocpkg("MSnID")` package can be used for post-search filtering
@@ -658,7 +661,7 @@ centroided(msexp) <- isCentroided(msexp)
 
 Spectra and (parts of) experiments can be extracted and plotted.
 
-```{r specplot}
+```{r specplot, fig.cap="Plotting a object of class `Spectrum`."}
 msexp[[1]]
 plot(msexp[[1]], full=TRUE)
 ```
@@ -666,11 +669,11 @@ plot(msexp[[1]], full=TRUE)
 As this data was labeled with iTRAQ4 isobaric tags, we can highlight
 these four peaks of interest with 
 
-```{r specplot1}
+```{r specplot1, fig.cap="Plotting a object of class `Spectrum` with reporter ions."}
 plot(msexp[[1]], full=TRUE, reporters = iTRAQ4)
 ```
 
-```{r specplot2}
+```{r specplot2, fig.cap="Plotting a object of class `MSnExp`"}
 msexp[1:3]
 plot(msexp[1:3], full=TRUE)
 ```
@@ -693,6 +696,7 @@ library("magrittr")
 tmterw <- tmterw %>%
     filterMsLevel(2L) %>%
     addIdentificationData(idres)
+tmterw
 ```
 </details>
 
@@ -735,14 +739,14 @@ Now now extract and plot all relevant information:
    `chromatogram` function.
 
 
-```{r visfig01, fig.cap = "Chromatogram"}
+```{r visfig01, fig.cap = "A chromatogram."}
 plot(chromatogram(ms)[[1]], type = "l")
 ```
 
 2. We concentrate at a specific retention time, 
    `r formatRt(hd[i, "retentionTime"])` minutes (`r hd[i, "retentionTime"]` seconds) 
 
-```{r visfig02}
+```{r visfig02, fig.cap = "A chromatogram with highlighted retention time of interest."}
 plot(chromatogram(ms)[[1]], type = "l")
 abline(v = hd[i, "retentionTime"]/60, col = "red")
 ```
@@ -750,7 +754,7 @@ abline(v = hd[i, "retentionTime"]/60, col = "red")
 3. This corresponds to the `r i`th MS1 spectrum, shown on the second
    row of figures.
 
-```{r visfig03, fig.cap = "Chromatogram with retention time marked."}
+```{r visfig03, fig.cap = "The MS1 spectrum at the retention time of interest."}
 plot(peaks(ms, i), type = "l", xlim = c(400, 1000))
 legend("topright", bty = "n",
        legend = paste0(
@@ -761,7 +765,7 @@ legend("topright", bty = "n",
 4. The ions that were selected for MS2 are highlighted by vertical
    lines. These are represented in the bottom part of the figure.
 
-```{r visfig04}
+```{r visfig04, fig.cap = "The MS1 spectrum at the retention time of interest, highlighting the peptides selected for MS2."}
 plot(peaks(ms, i), type = "l", xlim = c(400, 1000))
 legend("topright", bty = "n",
        legend = paste0(
@@ -775,7 +779,7 @@ abline(v = hd[ms2, "precursorMZ"],
 5. On the right, we zoom on the isotopic envelope of one peptide in
    particular (the one highlighted with a red line).
 
-```{r visfig05}
+```{r visfig05, fig.cap = "Isotopic envelope of a peptide."}
 plot(peaks(ms, i), type = "l", xlim = c(521, 522.5))
 abline(v = hd[ms2, "precursorMZ"], col = "#FF000080")
 ```
@@ -783,7 +787,7 @@ abline(v = hd[ms2, "precursorMZ"], col = "#FF000080")
 6. A final loop through the relevant MS2 spectra plots the
    `length(ms2)` MS2 spectra highlighted above.
 
-```{r visfig06, fig.width = 8, fig.height = 10}
+```{r visfig06, fig.width = 8, fig.height = 10, fig.cap = "MS2 spectra of all selected precursors from the previous MS1 spectrum."}
 par(mfrow = c(5, 2), mar = c(2, 2, 0, 1))
 for (ii in ms2) {
     p <- peaks(ms, ii)
@@ -808,7 +812,7 @@ lout[8, ] <- rep(9:13, each = 2)
 
 Putting it all together:
 
-```{r visfig}
+```{r visfig, fig.cap = "Visual summary of a full round of MS1 and MS2 acquisition for specific MS1 spectrum."}
 layout(lout)
 par(mar=c(4,2,1,1))
 
@@ -848,7 +852,7 @@ the left, we have a heatmap visualisation of a MS map and a 3
 dimensional representation of the same data. On the right, 2 MS1
 spectra in blue and the set of interleaves 10 MS2 spectra.
 
-```{r msmap1, message=FALSE, fig.width=15, echo=TRUE}
+```{r msmap1, message=FALSE, fig.width=15, echo=TRUE, fig.cap = "Plotting MS maps along retention time, MZ range and intensity."}
 ## (1) MS space heaptmap
 M <- MSmap(ms, ms1[rtsel], 521, 523, .005, hd)
 ff <- colorRampPalette(c("yellow", "steelblue"))
@@ -874,7 +878,7 @@ Below, we have animations build from extracting successive slices as above.
 
 Annotated spectra and comparing spectra. 
 
-```{r id1, message=FALSE, fig.width=15, message=FALSE}
+```{r id1, message=FALSE, fig.width=15, message=FALSE, fig.cap = "Annotating and comparing MS2 spectra."}
 par(mfrow = c(1, 2))
 itraqdata2 <- pickPeaks(itraqdata, verbose = FALSE)
 s <- "SIGFEGDSIGR"
@@ -932,7 +936,7 @@ quantitation technologies:
   peptide-spectrum matching confidence assessment.
 * `r Githubpkg("vladpetyuk/N14N15")` for heavy Nitrogen-labelled data.
 
-### Isobaric tagging
+### Isobaric tagging {-}
 
 An `MSnExp` is converted to an `MSnSet` by the `quantitation`
 method. Below, we use the iTRAQ 4-plex isobaric tagging strategy
@@ -977,7 +981,7 @@ processingData(msset)
 from centroided `mgf` peak lists or its own tab-separated files that
 can be generated from Mascot and Phenyx vendor files.
 
-### Spectral counting
+### Spectral counting {-}
 
 Other MS2 quantitation methods available in `quantify` include the
 (normalised) spectral index `SI` and (normalised) spectral abundance
@@ -1043,16 +1047,20 @@ processing methods.
 As an illustration, we show the `pickPeaks` function on the
 `itraqdata` data.
 
-```{r}
+```{r peakpicking, fig.keep = "last", fig.cap = "Peak picking: profile mode."}
+library("ggplot2") ## for coord_cartesian
 data(itraqdata)
 plot(itraqdata[[10]], full = TRUE) +
     coord_cartesian(xlim = c(915, 925))
+```
+
+```{r peakpicking2, fig.keep = "last", fig.cap = "Peak picking: centroided."}
 itraqdata2 <- pickPeaks(itraqdata)
 plot(itraqdata2[[10]], full = TRUE, w1 = 0.05) +
     coord_cartesian(xlim = c(915, 925))
 ```
 
-The `r Biocpkg("MALDIquant")`and `r Biocpkg("xcms")` packages also
+The `r Biocpkg("MALDIquant")` and `r Biocpkg("xcms")` packages also
 features a wide range of raw data processing methods on their own ad
 hoc data instance types.
 
@@ -1066,11 +1074,11 @@ quantitative data.
 ```{r pure}
 data(itraqdata)
 qnt <- quantify(itraqdata, method = "trap", reporters = iTRAQ4)
-impurities <- matrix(c(0.929,0.059,0.002,0.000,
-                       0.020,0.923,0.056,0.001,
-                       0.000,0.030,0.924,0.045,
-                       0.000,0.001,0.040,0.923),
-                     nrow=4, byrow = TRUE)
+impurities <- matrix(c(0.929, 0.059, 0.002, 0.000,
+                       0.020, 0.923, 0.056, 0.001,
+                       0.000, 0.030, 0.924, 0.045,
+                       0.000, 0.001, 0.040, 0.923),
+                     nrow = 4, byrow = TRUE)
 ## or, using makeImpuritiesMatrix()
 ## impurities <- makeImpuritiesMatrix(4)
 qnt <- purityCorrect(qnt, impurities)
@@ -1095,7 +1103,7 @@ accessions, for example).
 
 ```{r comb}
 gb <- fData(qnt)$ProteinDescription
-prt <- combineFeatures(qnt.crct.nrm, groupBy = gb, fun = "median")
+prt <- combineFeatures(qnt, groupBy = gb, fun = "median")
 processingData(prt)
 ```
 
@@ -1120,7 +1128,7 @@ towards the top and right of the heatmap, and barplots at the top and
 right summarise the number of missing values in the respective samples
 (column) and rows (rows).
 
-```{r}
+```{r naplot, fig.cap = "Overview of missing values."}
 naplot(naset)
 ```
 
@@ -1163,12 +1171,11 @@ LC/MSMS experiments.
 ```{r naheatmap, echo=FALSE}
 x <- impute(naset, "zero")
 exprs(x)[exprs(x) != 0] <- 1
-library("gplots")
-heatmap.2(exprs(x), col = c("lightgray", "black"),
-          scale = "none", dendrogram = "none",
-          trace = "none", keysize = 0.5, key = FALSE,
-          RowSideColors = ifelse(fData(x)$randna, "orange", "brown"),
-          ColSideColors = rep(c("steelblue", "darkolivegreen"), each = 8))
+gplots::heatmap.2(exprs(x), col = c("lightgray", "black"),
+                  scale = "none", dendrogram = "none",
+                  trace = "none", keysize = 0.5, key = FALSE,
+                  RowSideColors = ifelse(fData(x)$randna, "orange", "brown"),
+                  ColSideColors = rep(c("steelblue", "darkolivegreen"), each = 8))
 ```
 
 Different imputation methods are more appropriate to different classes
@@ -1177,7 +1184,7 @@ of missing values (as documented in this
 missing at random, and those missing not at random should be imputed
 with different methods.
 
-![RSR KNN and MinDet imputation](./Figures/imp-sim.png)
+![Root-mean-square error (RMSE) observations standard deviation ratio (RSR), KNN and MinDet imputation. Lower (blue) is better. (See [here](http://pubs.acs.org/doi/abs/10.1021/acs.jproteome.5b00981) for details)](./Figures/imp-sim.png)
 
 Generally, it is recommended to use **hot deck** methods (nearest
 neighbour (**left**), maximum likelihood, ...) when data are missing
@@ -1197,8 +1204,8 @@ There are various methods to perform data imputation, as described in
 # Statistical analysis
 
 R in general and Bioconductor in particular are well suited for the
-statistical analysis of data. Several packages provide dedicated
-resources for proteomics data:
+statistical analysis of data of quantitative proteomics data. Several
+packages provide dedicated resources for proteomics data:
 
 - `r Biocpkg("MSstats")`: A set of tools for statistical relative
   protein significance analysis in DDA, SRM and Data independent
@@ -1306,7 +1313,8 @@ available via the `r Biocpkg("hpar")` package.
 - Analysis of post translational modification with `r Biocpkg("isobar")`.
 - Processing and analysis or isobaric tagging mass spectrometry with
   `r Biocpkg("isobar")` and `r Biocpkg("MSnbase")`.
-- Analysis of spatial proteomics data with `r Biocpkg("pRoloc")`.
+- Analysis of spatial proteomics data and, more generally, supervised,
+  semi-supervised learning, and transfer learning using the `r Biocpkg("pRoloc")` package.
 - Analysis of MALDI data with the `r Biocpkg("MALDIquant")` package.
 - Access to the Proteomics Standard Initiative Common QUery InterfaCe
   with the `r Biocpkg("PSICQUIC")` package.
