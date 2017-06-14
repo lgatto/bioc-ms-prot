@@ -49,6 +49,15 @@ Bioconductor, as well as an increase in total number of downloads.
 ![Number of packages](./Figures/development_biocviews.png)
 ![Number of downloads](./Figures/downloads_biocviews.png)
 
+It is also good to highlight that several of these package have become
+a group effort by different developers in the community. This
+[post](https://lgatto.github.io/msnbase-contribs/) illustrates the
+various contributions to `r Biocpkg("MSnbase")`; `r Biocpkg("mzR")`
+has benefited by a similar wide range of successful
+contributions. Both packages, and in particular `r Biocpkg("mzR")`,
+are used by many others, and will be described in some detail in this
+workflow.
+
 This workflow illustrates R / Bioconductor infrastructure for
 proteomics. Topics covered focus on support for open community-driven
 formats for raw data and identification results, packages for
@@ -1008,11 +1017,11 @@ the number of peptide occurrences are used to populate the assay data.
 
 # Importing third-party quantitation data
 
-The PSI `mzTab` file format is aimed at providing a simpler (than XML
-formats) and more accessible file format to the wider community. It is
-composed of a key-value metadata section and peptide/protein/small
-molecule tabular sections. These data can be imported with the
-`readMzTabData`
+The Proteomics Standard Initiative (PSI) `mzTab` file format is aimed
+at providing a simpler (than XML formats) and more accessible file
+format to the wider community. It is composed of a key-value metadata
+section and peptide/protein/small molecule tabular sections. These
+data can be imported with the `readMzTabData`
 function^[We specify version 0.9 (which generates the warning) to fit with the version of that file. For recent files, the `version` argument should be ignored to use the importer for the current file version 1.0.].
 
 
