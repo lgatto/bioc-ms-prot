@@ -17,6 +17,7 @@ suppressPackageStartupMessages(library("BiocInstaller"))
 suppressPackageStartupMessages(library("RforProteomics"))
 suppressPackageStartupMessages(library("lattice"))
 suppressPackageStartupMessages(library("gridExtra"))
+suppressPackageStartupMessages(library("pRoloc"))
 ```
 
 **Modified:** `r file.info("lab.Rmd")$mtime`<br />
@@ -1168,7 +1169,7 @@ LC/MSMS experiments.
   distributed in the data and are defined as **missing not at random**
   (MNAR).
 
-```{r naheatmap, echo=FALSE}
+```{r naheatmap, echo=FALSE, fig.cap="Random and non-random missing values."}
 x <- impute(naset, "zero")
 exprs(x)[exprs(x) != 0] <- 1
 gplots::heatmap.2(exprs(x), col = c("lightgray", "black"),
@@ -1231,15 +1232,60 @@ for microarray and `ExpressionSet` instances, the
 `r Biocpkg("pRoloc")` package enables application of these algorithms
 to `MSnSet` data.
 
+## Dimensionality reduction
+
+Dimensionality reduction is very frequently used to summarise
+high-dimensional data. Below we will use principal component analysis
+(PCA), but other methods can be applied. Below, we will use the
+`plot2D` function from the `r Biocpkg("pRoloc")`
+package^[While originally developed for the analysis of spatial/organelle proteomics data in mind, it is applicable many use cases.],
+that will extract the expression values in the assay data, perform
+dimensionality reduction, an produce the scatter plot.
+
+Let's first use `plot2D` to visualise the pattern in 20 protein
+quantitation values (initial 20 dimensional data). Here, we use an
+example from spatial proteomics, where the quantitative protein
+profiles reflect the proteins sub-cellular localisation (from
+[Christoforou *et al*, 2016](https://www.nature.com/articles/ncomms9992),
+see also
+[Breckels *et al*, 2016](https://f1000research.com/articles/5-2926/)
+for more data analysis background). We will use the known localisation
+of some proteins (marker proteins) to annotate the plot (using the
+`fcol` argument).
+
+```{r plot2D1, fig.cap="PCA plot for protein sub-cellular localisation."}
+library("pRoloc")
+library("pRolocdata")
+data(hyperLOPIT2015)
+plot2D(hyperLOPIT2015, fcol = "markers")
+addLegend(hyperLOPIT2015, fcol = "markers", cex = .7)
+```
+
+In other cases, we want to visualise the relation of samples. `plot2D`
+uses the rows of the data to perform dimensionality reduction. To use
+the columns, we just need to transpose the `MSnSet`. By doing so, the
+`pData` becomes the `fData` and vice versa.
+
+Let's use a time-course experiment on stem cells
+([Mulvey *et al.* 2015](https://www.ncbi.nlm.nih.gov/pubmed/26059426)). Below,
+we use the `times` (time points) variable to set colours and `rep`
+(replicate numbers) to set the plotting characters.
+
+```{r plot2S2, fig.cap="PCA plots for sample in a time-course experiment."}
+data(mulvey2015)
+head(pData(mulvey2015))
+plot2D(t(mulvey2015),  fcol = "times", fpch = "rep", cex = 2)
+addLegend(t(mulvey2015),  fcol = "times")
+```
 ## Classification
 
-The example below uses `knn` with the 5 closest neighbours as an
-illustration to classify proteins of unknown sub-cellular localisation
-to one of 9 possible organelles.
+The example below uses `knn` with the 5 closest neighbours and the 
+`r Biocpkg("MLInterfaces")` package as an illustration to classify
+proteins of unknown sub-cellular localisation to one of 9 possible
+organelles.
 
 ```{r ml}
 library("MLInterfaces")
-library("pRoloc")
 library("pRolocdata")
 data(dunkley2006)
 traininds <- which(fData(dunkley2006)$markers != "unknown")
@@ -1249,19 +1295,16 @@ ans
 
 ## Clustering
 
-### kmeans
+A wide range of classification and clustering algorithms are also
+available, as described in the `?MLearn` documentation page, used
+below. 
 
-```{r clust}
+```{r clust, fig.cap = "Kmeans clustering using `r Biocpkg('MLInterfaces')` with an `MSnSet` object."}
 kcl <- MLearn( ~ ., data = dunkley2006, kmeansI, centers = 12)
 kcl
 plot(kcl, exprs(dunkley2006))
 ```
 
-A wide range of classification and clustering algorithms are also
-available, as described in the `?MLearn` documentation page. The
-`pRoloc` package also uses `MSnSet` instances as input and, while
-being conceived with the analysis of spatial/organelle proteomics data
-in mind, is applicable many use cases.
 
 # Annotation
 
@@ -1314,7 +1357,9 @@ available via the `r Biocpkg("hpar")` package.
 - Processing and analysis or isobaric tagging mass spectrometry with
   `r Biocpkg("isobar")` and `r Biocpkg("MSnbase")`.
 - Analysis of spatial proteomics data and, more generally, supervised,
-  semi-supervised learning, and transfer learning using the `r Biocpkg("pRoloc")` package.
+  semi-supervised learning, and
+  [transfer learning](https://www.ncbi.nlm.nih.gov/pubmed/23523639)
+  using the `r Biocpkg("pRoloc")` package.
 - Analysis of MALDI data with the `r Biocpkg("MALDIquant")` package.
 - Access to the Proteomics Standard Initiative Common QUery InterfaCe
   with the `r Biocpkg("PSICQUIC")` package.
