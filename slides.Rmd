@@ -121,8 +121,8 @@ head(centroided(x))
 ## 
 
 ```{r msb3, cache=TRUE}
-table(isCentroided(x), msLevel(x))
-centroided(x) <- isCentroided(x)
+table(iscent <- isCentroided(x), msLevel(x))
+centroided(x) <- iscent
 head(centroided(x))
 ```
 
@@ -274,7 +274,7 @@ fData(x)$pepseq
 ```{r qnt}
 xq <- quantify(x, reporters = iTRAQ4, method = "max")
 exprs(xq)
-headf(Data(xq))
+head(fData(xq))
 ```
 
 ## 
@@ -294,21 +294,8 @@ MAplot(nqt[, 1:2])
 
 # Conclusions
 
-## Packages of interest
-
-All MS and proteomics Bioc packages (from [biocViews]()):
-
-```r
-RforProteomics::proteomicsPackages()
-RforProteomics::massSpectrometryPackages()
-```
-- `MSnID`, `MSstats`, `msmsTests`
-- Many Bioconductor packages for the statistical and downstream
-  analysis
-
 ## More examples
 
-- Lab this afternoon
 - [Proteomics workflow](http://bioconductor.org/help/workflows/proteomics/)
   on the Bioc site
 - `RforProteomics` package
@@ -318,12 +305,11 @@ RforProteomics()
 RProtVis()
 citation(package = "RforProteomics")
 ```
+- Lab this afternoon
 
+## Lab vignette
 
-## References
-
-- RforProteomics vignette
-- MS/proteomics workflow
+![The lab material](./Figures/lab.png)
 
 ## Acknowledgements
 

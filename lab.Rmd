@@ -8,7 +8,7 @@ output:
     toc_float: true
 ---
 
-```{r env, echo=FALSE, message=FALSE}
+```{r env, echo=FALSE, message=FALSE, warning=FALSE}
 .cache <- FALSE
 suppressPackageStartupMessages(library("BiocStyle"))
 suppressPackageStartupMessages(library("MSnbase"))
@@ -42,6 +42,16 @@ themselves with R and Bioconductor infrastructure.
 
 # Introduction
 
+Before we start:
+
+> If you identify typos, if there are parts that you would like to see
+> expended or clarified, please let me know by telling me directly
+> (during workshops), opening a
+> [github issue](https://github.com/lgatto/bioc-ms-prot/issues) or by
+> emailing me directly. Please do also briefly specify your
+> background/familiarity with mass spectrometry and/or proteomics
+> (beginner, intermediate or expert) so that I can update accordingly.
+
 In recent years, there we have seen an increase in the number of
 packages to analyse mass spectrometry and proteomics data for R and
 Bioconductor, as well as an increase in total number of downloads.
@@ -50,10 +60,10 @@ Bioconductor, as well as an increase in total number of downloads.
 ![Number of downloads](./Figures/downloads_biocviews.png)
 
 It is also good to highlight that several of these package have become
-a group effort by different developers in the community. This
-[post](https://lgatto.github.io/msnbase-contribs/) illustrates the
-various contributions to `r Biocpkg("MSnbase")`; `r Biocpkg("mzR")`
-has benefited by a similar wide range of successful
+a group efforts, supported by several developers in the
+community. This [post](https://lgatto.github.io/msnbase-contribs/)
+illustrates the various contributions to `r Biocpkg("MSnbase")`; `r
+Biocpkg("mzR")` has benefited by a similar wide range of successful
 contributions. Both packages, and in particular `r Biocpkg("mzR")`,
 are used by many others, and will be described in some detail in this
 workflow.
@@ -180,12 +190,12 @@ which centrally coordinates submission, storage and dissemination
 through multiple data repositories, such as the
 [PRoteomics IDEntifications (PRIDE)](https://www.ebi.ac.uk/pride/archive/)
 database at the EBI for mass spectrometry-based experiments (including
-quantiative data, as opposed as the name suggests),
-[PASSEL](http://www.peptideatlas.org/passel/) at the ISB for SRM data
-and the
+quantitative data, as opposed as the name suggests),
+[PASSEL](http://www.peptideatlas.org/passel/) at the ISB for Selected
+Reaction Monitoring (SRM, i.e. targeted) data and the
 [MassIVE](http://massive.ucsd.edu/ProteoSAFe/static/massive.jsp)
-resource. These data can be downloaded within R using the
-`r Biocpkg("rpx")` package.
+resource. These data can be downloaded within R using the `r
+Biocpkg("rpx")` package.
 
 
 ```{r rpx}
@@ -239,10 +249,6 @@ ah <- AnnotationHub()
 query(ah, "proteomics")
 ```
 
-Below, we download a raw mass spectrometry dataset with identifier
-`AH49008` and store it in a variable names `ms`. (We will learn about
-the raw mass spectrometry datasets in the next section.)
-
 ```{r ah, message=FALSE}
 ms <- ah[["AH49008"]]
 ms
@@ -256,7 +262,7 @@ nms2 <- table(hd$msLevel)[[2]]
 ```
 
 The data contains `r lms` spectra - `r nms1` MS1 spectra and `r nms2`
-MS2 spectra. The filename, `r basename(fileName(ms))`, is not very
+MS2 spectra. The file name, `r basename(fileName(ms))`, is not very
 descriptive because the data originates from the `AnnotationHub` cloud
 repository. If the data was read from a local file, is would be named
 as the `mzML` (or `mzXML`) file (see below).
@@ -281,6 +287,7 @@ of interest.
 
 ```{r rawms}
 library("mzR")
+basename(mzf)
 ms <- openMSfile(mzf)
 ms
 ```
@@ -305,9 +312,8 @@ head(peaks(ms, 1000))
 plot(peaks(ms, 1000), type = "h", xlab = "M/Z", ylab = "Intensity")
 ```
 
-
 > **Exercise** Identify the index of the MS2 spectrum with the highest
-> precusor intensity (see the `precursorIntensity` feature variable)
+> precursor intensity (see the `precursorIntensity` feature variable)
 > and plot it as illustrated above. 
 
 <details>
@@ -360,17 +366,21 @@ id1 <- openIDfile(f)
 id1
 ```
 
-Various data can be extracted from the identifcationt object. The
-peptide spectum matches (PSMs) can be accessed as a data.frame with
-`psms`.
+Various data can be extracted from the identification object. The
+peptide spectrum matches (PSMs) and the identification scores can be
+accessed as a data.frame with `psms` and `score` respectively.
 
-```{r}
+```{r psms}
 softwareInfo(id1)
 enzymes(id1)
 fid1 <- mzR::psms(id1)
 head(fid1)
 ```
 
+```{r iscores}
+sc1 <- mzR::score(id1)
+head(sc1)
+```
 
 The `r Biocpkg("mzID")` package, has similar functionality to parse
 identification files, and was the first one to provide such
@@ -378,6 +388,34 @@ capabilities in R. The main difference with `r Biocpkg("mzR")` is that
 is parses the files using the `r CRANpkg("XML")`package and reads the
 whole data into memory rather than relying on proteowizard, and is
 slower.
+
+> **Exercise** Data wrangling with identification data; the standard
+> `r CRANpkg("tidyverse")` tools are fit for purpose here. Extract and
+> combine the PSMs and their scores as described above and combine
+> them. From the available data, calculate the length of each peptide
+> (you can use `nchar` with the peptide sequence `sequence`) and the
+> number of peptides for each protein (`DatabaseDescription`). Plot
+> the length of the proteins for their respective number of
+> peptides. Optionally, stratify the plot by the peptide e-value score
+> (`MS.GF.EValue`) using for example `cut` to define bins.
+
+<details>
+```{r answid1, fig.cap="Identifcation data wrangling 1"}
+suppressPackageStartupMessages(library("dplyr"))
+fid1$peplen <- nchar(as.character(fid1$sequence))
+ids <- as_tibble(full_join(fid1, sc1))
+npeps <- ids %>% group_by(DatabaseDescription) %>% tally 
+ids <- full_join(ids, npeps)
+library("ggplot2")
+ggplot(ids, aes(x = n, y = DBseqLength)) + geom_point()
+```
+```{r answid2, fig.cap="Identifcation data wrangling 2"}
+ids$evalBins <- cut(ids$MS.GF.EValue, summary(ids$MS.GF.EValue))
+ggplot(ids, aes(x = n, y = DBseqLength, color = peplen)) +
+    geom_point() +
+    facet_wrap(~ evalBins)
+```
+</details>
 
 # MS/MS database search
 
@@ -493,7 +531,7 @@ msnid <- assess_missed_cleavages(msnid, missedCleavagePattern="[KR](?=[^P$])")
 
 Now, we can use the `apply_filter` function to effectively apply
 filters. The strings passed to the function represent expressions that
-will be evaludated, this keeping only PSMs that have 0 irregular
+will be evaluated, this keeping only PSMs that have 0 irregular
 cleavages and 2 or less missed cleavages.
 
 ```{r msnidtrim}
@@ -536,7 +574,7 @@ msnid$msmsScore <- -log10(msnid$`MS-GF:SpecEValue`)
 msnid$absParentMassErrorPPM <- abs(mass_measurement_error(msnid))
 ```
 
-MS2 fiters are handled by a special `MSnIDFilter` class objects, where
+MS2 filters are handled by a special `MSnIDFilter` class objects, where
 individual filters are set by name (that is present in `names(msnid)`)
 and comparison operator (>, <, = , ...)  defining if we should retain
 hits with higher or lower given the threshold and finally the
@@ -613,11 +651,11 @@ Another useful slot is `processingData`, accessed with
 `processingData(.)`, that records all the processing that objects have
 undergone since their creation (see examples below).
 
-The `readMSData2` (there is also a `readMSData` variant - see the
-`benchmarking` vignete in `r Biocpkg("MSnbase")` for their
-differences) will parse the raw data, extract all MS spectra (by
-default, but individual MS levels can selected, as illustrated below)
-and construct an MS experiment object of class `MSnExp`.
+The `readMSData2` (there is also a `readMSData` variant - see the `benchmarking` vignette[^Open it with `vignette("benchmarking", package = "MSnbase")` or read it [online](https://bioconductor.org/packages/release/bioc/vignettes/MSnbase/inst/doc/benchmarking.html)]
+in `r Biocpkg("MSnbase")` for their differences) will parse the raw
+data, extract all MS spectra (by default, but individual MS levels can
+selected, as illustrated below) and construct an MS experiment object
+of class `MSnExp`.
 
 ```{r msnbase}
 library("MSnbase")
@@ -655,7 +693,7 @@ The `readMSData2` (`readMSdata`) and `addIdentificationData` make use
 of the `mzR` and `mzID` packages to access the raw and identification
 data.
 
-> **Exercice** Are the spectra in the `msexp` object centroided? This
+> **Exercise** Are the spectra in the `msexp` object centroided? This
 > time, instead of looking at the spectra, we can query (and set) this
 > information directly using the `centroided` function (and
 > `centroided<-` replacement function). The `isCentroided` function
@@ -720,6 +758,8 @@ below^[Figure and code taken from the `r Biocannopkg("RforProteomics")` [visuali
 only can we access specific data and understand/visualise them, but we
 can transverse all the data and extracted/visualise/understand
 structured slices of data.
+
+![Visual summary of a full round of MS1 and MS2 acquisition for specific MS1 spectrum.](./Figures/visfig-1.png)
 
 In this code chunks we start by selecting relevant spectra of
 interest. We will focus on the first MS1 spectrum acquired after 30
@@ -995,9 +1035,8 @@ can be generated from Mascot and Phenyx vendor files.
 
 Other MS2 quantitation methods available in `quantify` include the
 (normalised) spectral index `SI` and (normalised) spectral abundance
-factor `SAF` or simply a simple count method^[The code below is for
-illustration only - is doesn't make any sense to perform any of these
-quantiations on such a multiplexed data].
+factor `SAF` or simply a simple count
+method^[The code below is for illustration only - it doesn't make much sense to perform any of these quantitations on such a multiplexed data].
 
 ```{r lfms2}
 exprs(si <- quantify(msexp, method = "SIn"))     
@@ -1218,9 +1257,9 @@ statistical analysis of data of quantitative proteomics data. Several
 packages provide dedicated resources for proteomics data:
 
 - `r Biocpkg("MSstats")`: A set of tools for statistical relative
-  protein significance analysis in DDA, SRM and Data independent
-  acquisition (DIA) experiments. Data stored in `data.frame` or
-  `MSnSet` objects can be used as input.
+  protein significance analysis in Data dependent (DDA), SRM and Data
+  independent acquisition (DIA) experiments. Data stored in
+  `data.frame` or `MSnSet` objects can be used as input.
 
 - `r Biocpkg("msmsTests")`: Statistical tests for label-free LC-MS/MS
   data by spectral counts, to discover differentially expressed
@@ -1340,7 +1379,7 @@ res
 ```
 
 There is a single exact match (default is to retrieve 20 results),
-that can be retrieved and coreced to a `Terms` or `data.frame` object
+that can be retrieved and coerced to a `Terms` or `data.frame` object
 with
 
 ```{r rols2}
