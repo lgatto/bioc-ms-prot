@@ -239,15 +239,17 @@ ms
 ```
 
 ```{r mshd, echo=FALSE}
+lms <- length(ms)
 hd <- header(ms)
+nms1 <- table(hd$msLevel)[[1]]
+nms2 <- table(hd$msLevel)[[2]]
 ```
 
-The data contains `r length(ms)` spectra - `r table(hd$msLevel)[[1]]`
-MS1 spectra and `r table(hd$msLevel)[[2]]` MS2 spectra. The filename,
-`r basename(fileName(ms))`, is not very descriptive because the data
-originates from the `AnnotationHub` cloud repository. If the data was
-read from a local file, is would be named as the `mzML` (or `mzXML`)
-file. 
+The data contains `r lms` spectra - `r nms1` MS1 spectra and `r nms2`
+MS2 spectra. The filename, `r basename(fileName(ms))`, is not very
+descriptive because the data originates from the `AnnotationHub` cloud
+repository. If the data was read from a local file, is would be named
+as the `mzML` (or `mzXML`) file (see below).
 
 
 # Handling raw MS data
@@ -934,11 +936,11 @@ quantitation technologies:
 
 An `MSnExp` is converted to an `MSnSet` by the `quantitation`
 method. Below, we use the iTRAQ 4-plex isobaric tagging strategy
-(defined by the `iTRAQ4` parameter; other tags are available) and the
-`max` method to calculate the use the maximum of the reporter peak for
-quantitation.
+(defined by the `iTRAQ4` parameter; other tags are available: see
+`?ReporterIons`) and the `max` method to calculate the use the maximum
+of the reporter peak for quantitation.
 
-```{r itraq4plot}
+```{r itraq4plot, fig.cap = "MS2 spectrum and it's iTRAQ4 reporter ions."}
 plot(msexp[[1]], full=TRUE, reporters = iTRAQ4)
 ```
 
@@ -1044,8 +1046,7 @@ quantitative data.
 
 ```{r pure}
 data(itraqdata)
-qnt <- quantify(itraqdata, method = "trap",
-                reporters = iTRAQ4, verbose = FALSE)
+qnt <- quantify(itraqdata, method = "trap", reporters = iTRAQ4)
 impurities <- matrix(c(0.929,0.059,0.002,0.000,
                        0.020,0.923,0.056,0.001,
                        0.000,0.030,0.924,0.045,
@@ -1053,27 +1054,8 @@ impurities <- matrix(c(0.929,0.059,0.002,0.000,
                      nrow=4, byrow = TRUE)
 ## or, using makeImpuritiesMatrix()
 ## impurities <- makeImpuritiesMatrix(4)
-qnt.crct <- purityCorrect(qnt, impurities)
-processingData(qnt.crct)
-```
-
-
-```{r pureplot, echo=FALSE}
-plot0 <- function(x, y, main = "") {
-    old.par <- par(no.readonly = TRUE)
-    on.exit(par(old.par))
-    par(mar = c(4, 4, 1, 1))
-    par(mfrow = c(2, 2))
-    sx <- sampleNames(x)
-    sy <- sampleNames(y)
-    for (i in seq_len(ncol(x))) {
-        plot(exprs(x)[, i], exprs(y)[, i], log = "xy",
-             xlab = sx[i], ylab = sy[i])
-        abline(0, 1)
-        grid()
-    }
-}
-## plot0(qnt, qnt.crct, main = "Before/after correction")
+qnt <- purityCorrect(qnt, impurities)
+processingData(qnt)
 ```
 
 Various normalisation methods can be applied the `MSnSet` instances
@@ -1082,12 +1064,10 @@ using the `normalise` method: variance stabilisation (`vsn`), quantile
 `center.mean`), ...
 
 ```{r norm}
-qnt.crct.nrm <- normalise(qnt.crct, "quantiles") 
+qnt <- normalise(qnt, "quantiles")
+processingData(qnt)
 ```
 
-```{r plotnorm, echo=FALSE}
-## plot0(qnt, qnt.crct.nrm)
-```
 
 The `combineFeatures` method combines spectra/peptides quantitation
 values into protein data. The grouping is defined by the `groupBy`
@@ -1095,10 +1075,8 @@ parameter, which is generally taken from the feature metadata (protein
 accessions, for example).
 
 ```{r comb}
-## arbitraty grouping
-g <- factor(c(rep(1, 25), rep(2, 15), rep(3, 15)))
-g
-prt <- combineFeatures(qnt.crct.nrm, groupBy = g, fun = "sum")
+gb <- fData(qnt)$ProteinDescription
+prt <- combineFeatures(qnt.crct.nrm, groupBy = gb, fun = "median")
 processingData(prt)
 ```
 
