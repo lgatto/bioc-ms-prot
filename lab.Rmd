@@ -18,6 +18,7 @@ suppressPackageStartupMessages(library("RforProteomics"))
 suppressPackageStartupMessages(library("lattice"))
 suppressPackageStartupMessages(library("gridExtra"))
 suppressPackageStartupMessages(library("pRoloc"))
+library("mstut")
 ```
 
 **Modified:** `r file.info("lab.Rmd")$mtime`<br />
@@ -157,6 +158,17 @@ Other packages of interest, such as
 will be described later in the document but are not required to
 execute the code in this workflow.
 
+To study the workflow off-line, it is possible to download data files
+as a package in advance^[See details in the *Data packages*
+section.]. Install the dependencies and the package prior to the
+workshop with
+
+```{r pxd1pkg0, eval = FALSE}
+library("BiocInstaller")
+biocLite(c("msdata", "MSnbase", "mzR"))
+biocLite("lgatto/PXD0001")
+```
+
 
 ## Exploring available infrastructure { - }
 
@@ -186,30 +198,6 @@ pp <- proteomicsPackages()
 display(pp)
 ```
 
-## How does mass spectrometry work?
-
-- Separation of molecules: *liquid chromatography* (LC)
-- Ionisation of molecules: MS *source* (MALDI, ESI, ...)
-- Separation of ions: MS *analyser* (tof, orbitraps, ...)
-- Quantitation of ions: MS *detector*
-
-When using mass spectrometry for proteomics, the proteins are first
-digested with a protease such as trypson. In mass shotgun proteomics,
-the analytes assayed in the mass spectrimeter are peptides.
-
-
-![A chromatogram ](./Figures/chromatogram.png)
-
-
-![Schematics of a mass spectrometer.](./Figures/SchematicMS2.png)
-
-![MS data](./Figures/F02-3D-MS1-scans-400-1200-lattice.png)
-
-![MS data](./Figures/F02-3D-MS1-scans-400-1200-lattice.png)
-
-
-![MS data](./Figures/F02-3D-MS1-MS2-scans-100-1200-lattice.png)
-
 
 ## Mass spectrometry data { - }
 
@@ -233,6 +221,93 @@ datatab <-
 library("knitr")
 kable(datatab)
 ```
+
+# How does mass spectrometry work?
+
+Mass spectrometry (MS) is a technology that *separates* charges
+molecules (ions) based on their mass to charge ratio (M/Z). It is
+often coupled to chromatography (liquid LC, but can also be gas-based
+GC). The time an analytes takes to elute from the chromatography
+column is the *retention time*.
+
+![A chromatogram, illustrating the total amount of analytes over the retention time.](./Figures/chromatogram.png)
+
+An mass spectrometer is composed of three components:
+
+1. The *source*, that ionises the molecules: examples are Matrix-assisted
+   laser desorption/ionisation (MALDI) or electrospray ionisation.
+   (ESI)
+2. The *analyser*, that separates the ions: Time of flight (TOF) or Orbitrap.
+3. The *detector* that quantifies the ions.
+
+When using mass spectrometry for proteomics, the proteins are first
+digested with a protease such as trypsin. In mass shotgun proteomics,
+the analytes assayed in the mass spectrometer are peptides.
+
+Often, ions are subjected to more than a single MS round. After a
+first round of separation, the peaks in the spectra, called MS1
+spectra, represent peptides. At this stage, the only information we
+possess about these peptides are their retention time and their
+mass-to-charge (we can also infer their charge be inspecting their
+isotopic envelope, i.e the peaks of the individual isotopes, see
+below), which is not enough to infer their identify (i.e. their
+sequence). 
+
+In MSMS (or MS2), the settings of the mass spectrometer are set
+automatically to select a certain number of MS1 peaks (for example
+20). Once a narrow M/Z range has been selected (corresponding to one
+high-intensity peak, a peptide, and some background noise), it is
+fragmented (using for example collision-induced dissociation (CID),
+higher energy collisional dissociation (HCD) or electron-transfer
+dissociation (ETD)). The fragment ions are then themselves separated
+in the analyser to produce a MS2 spectrum. The unique fragment ion
+pattern can then be used to infer the peptide sequence using de novo
+sequencing (when the spectrum is of high enough quality) of using a
+search engine such as, for example Mascot, MSGF+, ..., that will match
+the observed, experimental spectrum to theoratical spectra (see
+details below).
+
+![Schematics of a mass spectrometer and two rounds of MS.](./Figures/SchematicMS2.png)
+
+The animation below, produced with the `r Githubpkg("mstut")` package
+show how 25 ions different ions (i.e. having different M/Z values) are
+separated throughout the MS analysis and are eventually detected
+(i.e. quantified). The final frame shows the hypothetical spectrum.
+
+```{r mstut0, echo=FALSE}
+if (!file.exists("Figures/mstut.gif")) {
+    library("mstut")
+    library("animation")
+    set.seed(1L)
+    x <- new_ions(npeaks = 25, nimg = 10)
+    saveGIF({
+        analyse(x, sleep = 0)
+        detect(x)
+        spectrum(x, main = "Spectrum")
+    }, movie.name = "./Figures/mstut.gif")
+}
+```
+
+![Separation and detection of ions in a mass spectrometer.](./Figures/mstut.gif)
+
+The figures below illustrate the two rounds of MS. The spectrum on the
+left is an MS1 spectrum acquired after 21 minutes and 3 seconds of
+elution. 10 peaks, highlited by dotted vertical lines, were selected
+for MS2 analysis. The peak at M/Z 460.79 (488.8) is highlighted by a
+red (orange) vertical line on the MS1 spectrum and the fragment
+spectra are shown on the MS2 spectrum on the top (bottom) right
+figure.
+
+![Parent ions in the MS1 spectrum (left) and two sected fragment ions MS2 spectra (right).](./Figures/MS1-MS2-spectra.png)
+
+The figures below represent the 3 dimensions of MS data: a set of
+spectra (M/Z and intensity) of retention time, as well as the
+interleaved nature of MS1 and MS2 (and there could be more levels)
+data.
+
+![MS1 spectra over retention time.](./Figures/F02-3D-MS1-scans-400-1200-lattice.png)
+
+![MS2 spectra interleaved between two MS1 spectra.](./Figures/F02-3D-MS1-MS2-scans-100-1200-lattice.png)
 
 # Accessing data
 
@@ -321,7 +396,6 @@ descriptive because the data originates from the `AnnotationHub` cloud
 repository. If the data was read from a local file, is would be named
 as the `mzML` (or `mzXML`) file (see below).
 
-
 ## Data packages
 
 Some data are also distributed through dedicated packages. The 
@@ -331,20 +405,16 @@ metabolomics. More often, such *experiment packages* distribute
 processed data; an example of such is the `r BiocStyle::Biocexptpkg("pRolocdata")` 
 package, that offers quantitative proteomics data.
 
-For this workflow, the the
-*[PXD000001](https://bitbucket.org/lgatto/pxd000001)* package
-distributes the files from the PXD000001 experiment. This is not an
-official package, but is use full to pre-install the relevant data
-files for local access. To install the package, we use the
-`install_bitbucket` function from the `r CRANpkg("devtools")` package:
+The files from the *PXD00001* experiment are also available in the 
+`r Githubpkg("lgatto/PXD000001")`. This option is convenient when
+online access is absent or unreliable. Install the dependencies and
+the package prior to the workshop with
 
-```{r bitbucket, eval=FALSE}
-library("devtools")
-install_bitbucket("lgatto/PXD000001")
+```{r pxd1pkg, eval = FALSE}
+library("BiocInstaller")
+biocLite(c("msdata", "MSnbase", "mzR"))
+biocLite("lgatto/PXD0001")
 ```
-
-Files can then be copied to the working directory using the `px1get`
-function. See the manual page for details.
 
 # Handling raw MS data
 
