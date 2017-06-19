@@ -186,6 +186,31 @@ pp <- proteomicsPackages()
 display(pp)
 ```
 
+## How does mass spectrometry work?
+
+- Separation of molecules: *liquid chromatography* (LC)
+- Ionisation of molecules: MS *source* (MALDI, ESI, ...)
+- Separation of ions: MS *analyser* (tof, orbitraps, ...)
+- Quantitation of ions: MS *detector*
+
+When using mass spectrometry for proteomics, the proteins are first
+digested with a protease such as trypson. In mass shotgun proteomics,
+the analytes assayed in the mass spectrimeter are peptides.
+
+
+![A chromatogram ](./Figures/chromatogram.png)
+
+
+![Schematics of a mass spectrometer.](./Figures/SchematicMS2.png)
+
+![MS data](./Figures/F02-3D-MS1-scans-400-1200-lattice.png)
+
+![MS data](./Figures/F02-3D-MS1-scans-400-1200-lattice.png)
+
+
+![MS data](./Figures/F02-3D-MS1-MS2-scans-100-1200-lattice.png)
+
+
 ## Mass spectrometry data { - }
 
 Most community-driven formats described in the table are supported in
@@ -296,6 +321,30 @@ descriptive because the data originates from the `AnnotationHub` cloud
 repository. If the data was read from a local file, is would be named
 as the `mzML` (or `mzXML`) file (see below).
 
+
+## Data packages
+
+Some data are also distributed through dedicated packages. The 
+`r BiocStyle::Biocexptpkg("msdata")`, for example, provides some
+general raw data files relevant for both proteomics and
+metabolomics. More often, such *experiment packages* distribute
+processed data; an example of such is the `r BiocStyle::Biocexptpkg("pRolocdata")` 
+package, that offers quantitative proteomics data.
+
+For this workflow, the the
+*[PXD000001](https://bitbucket.org/lgatto/pxd000001)* package
+distributes the files from the PXD000001 experiment. This is not an
+official package, but is use full to pre-install the relevant data
+files for local access. To install the package, we use the
+`install_bitbucket` function from the `r CRANpkg("devtools")` package:
+
+```{r bitbucket, eval=FALSE}
+library("devtools")
+install_bitbucket("lgatto/PXD000001")
+```
+
+Files can then be copied to the working directory using the `px1get`
+function. See the manual page for details.
 
 # Handling raw MS data
 
