@@ -8,6 +8,38 @@ output:
     toc_float: true
 ---
 
+
+<style type="text/css">
+/* https://jsfiddle.net/2ffd2qgo/ */
+.boxed {
+  float: right;
+  padding: 0 2px 0 2px;
+  border: 1px solid rgba(0, 0, 0, .2);
+  border-radius: 4px;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.blue {
+  background: #13b4ff;
+}
+
+.purple {
+  background: #ab3fdd;
+}
+
+.wine {
+  background: #ae163e;
+}
+
+.yellow {
+  background: #ffff09;
+}
+</style>
+
+<!-- <div class="boxed blue">Beginner</div><div class="boxed purple">Foo</div><div class="boxed yellow">Bar</div><br/> -->
+
+
 ```{r env, echo=FALSE, message=FALSE, warning=FALSE}
 .cache <- FALSE
 suppressPackageStartupMessages(library("BiocStyle"))
@@ -21,8 +53,8 @@ suppressPackageStartupMessages(library("pRoloc"))
 library("mstut")
 ```
 
-**Modified:** `r file.info("lab.Rmd")$mtime`<br />
-**Compiled**: `r date()`
+<!-- **Modified:** `r file.info("lab.Rmd")$mtime`<br /> -->
+<!-- **Compiled**: `r date()` -->
 
 
 **Abstract** In this workflow, we will use R/Bioconductor packages to
@@ -41,7 +73,7 @@ themselves with R and Bioconductor infrastructure.
 > material in any medium or format) and **adapt** (remix, transform,
 > and build upon the material) for any purpose, even commercially.
 
-# Introduction
+# Introduction 
 
 Before we start:
 
@@ -414,6 +446,21 @@ the package prior to the workshop with
 library("BiocInstaller")
 biocLite(c("msdata", "MSnbase", "mzR"))
 biocLite("lgatto/PXD0001")
+```
+
+The `r Githubpkg("lgatto/PXD000001")` packages provides the `px1files`
+and `px1get` functions as a drop-in replacement for the `pxfiles` and
+`pxget` function from `r Biocpkg("rpx")` package, for the *PXD000001*
+dataset.
+
+```{r unlinkfas, echo=FALSE}
+unlink("erwinia_carotovora.fasta")
+```
+
+```{r pxd1pkg2}
+library("PXD000001")
+px1files()
+px1get("erwinia_carotovora.fasta")
 ```
 
 # Handling raw MS data
