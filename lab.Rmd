@@ -4,7 +4,7 @@ author:
 - name: Laurent Gatto
   affiliation: Computational Proteomics Unit, Cambridge, UK
 output:
-  BiocStyle::html_document2:
+  BiocStyle::html_document:
     toc_float: true
 ---
 
@@ -42,6 +42,7 @@ output:
 
 ```{r env, echo=FALSE, message=FALSE, warning=FALSE}
 .cache <- FALSE
+stopifnot(packageVersion("BiocStyle") >= "2.5.19")
 suppressPackageStartupMessages(library("BiocStyle"))
 suppressPackageStartupMessages(library("MSnbase"))
 suppressPackageStartupMessages(library("BiocParallel"))
@@ -50,7 +51,6 @@ suppressPackageStartupMessages(library("RforProteomics"))
 suppressPackageStartupMessages(library("lattice"))
 suppressPackageStartupMessages(library("gridExtra"))
 suppressPackageStartupMessages(library("pRoloc"))
-library("mstut")
 ```
 
 <!-- **Modified:** `r file.info("lab.Rmd")$mtime`<br /> -->
@@ -301,10 +301,10 @@ details below).
 
 ![Schematics of a mass spectrometer and two rounds of MS.](./Figures/SchematicMS2.png)
 
-The animation below, produced with the `r Githubpkg("mstut")` package
-show how 25 ions different ions (i.e. having different M/Z values) are
-separated throughout the MS analysis and are eventually detected
-(i.e. quantified). The final frame shows the hypothetical spectrum.
+The animation below show how 25 ions different ions (i.e. having
+different M/Z values) are separated throughout the MS analysis and are
+eventually detected (i.e. quantified). The final frame shows the
+hypothetical spectrum.
 
 ```{r mstut0, echo=FALSE}
 if (!file.exists("Figures/mstut.gif")) {
