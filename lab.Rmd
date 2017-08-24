@@ -1,5 +1,5 @@
 ---
-title: "Bioconductor tools for mass spectrometry and proteomics"
+title: "Lab: Bioconductor tools for mass spectrometry and proteomics"
 author: 
 - name: Laurent Gatto
   affiliation: Computational Proteomics Unit, Cambridge, UK

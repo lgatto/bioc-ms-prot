@@ -1,6 +1,7 @@
 all:
 	make slides.html
 	make lab.html
+	make material.html
 
 %.md: %.Rmd
 	Rscript -e "knitr::knit('$^')"
