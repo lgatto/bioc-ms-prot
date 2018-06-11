@@ -256,7 +256,7 @@ kable(datatab)
 
 # How does mass spectrometry work?
 
-Mass spectrometry (MS) is a technology that *separates* charges
+Mass spectrometry (MS) is a technology that *separates* charged
 molecules (ions) based on their mass to charge ratio (M/Z). It is
 often coupled to chromatography (liquid LC, but can also be gas-based
 GC). The time an analytes takes to elute from the chromatography
