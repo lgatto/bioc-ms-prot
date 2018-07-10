@@ -554,7 +554,8 @@ fData(msexp)$isDecoy
 > available in the `msdata` package using `readMSData`, making sure
 > you set `mode = "onDisk"`, and verify which MS levels (accessible
 > with the `msLevel` function) are centroided (accessible with the
-> `centroided()` function).
+> `centroided()` function). See section *Raw data processing* for data
+> in profile and centroided (processed) modes.
 
 <details>
 ```{r answ3}
@@ -708,8 +709,8 @@ The easiest way to read identification data in `mzIdentML` (often
 abbreviated with `mzid`) into R is to read it with `readMzIdData`,
 that will parse it, process it, and return a `data.frame`:
 
-```{r}
-iddf <- readMzIdData(f)
+```{r readid}
+iddf <- readMzIdData(idf)
 head(iddf)
 ```
 
@@ -794,7 +795,7 @@ ggplot(ids, aes(x = n, y = DBseqLength, color = peplen)) +
 ```
 </details>
 
-# MS/MS database search
+## MS/MS database search
 
 While searches are generally performed using third-party software
 independently of R or can be started from R using a `system` call, the
@@ -840,7 +841,7 @@ MSGFgui()
 The `r Biocpkg("rTANDEM")` package can be used to perform a search
 with *XTandem* software.
 
-# Analysing search results
+## Analysing search results
 
 The `r Biocpkg("MSnID")` package can be used for post-search filtering
 of MS/MS identifications. One starts with the construction of an
@@ -892,7 +893,7 @@ Here, we summarise a few steps and redirect the reader to the
 package's vignette for more details:
 
 
-## Analysis of peptide sequences
+### Analysis of peptide sequences
 
 Cleaning irregular cleavages at the termini of the peptides and
 missing cleavage site within the peptide sequences. The following two
@@ -904,7 +905,7 @@ msnid <- assess_termini(msnid, validCleavagePattern="[KR]\\.[^P]")
 msnid <- assess_missed_cleavages(msnid, missedCleavagePattern="[KR](?=[^P$])")
 ```
 
-## Trimming the data
+### Trimming the data
 
 Now, we can use the `apply_filter` function to effectively apply
 filters. The strings passed to the function represent expressions that
@@ -917,7 +918,7 @@ msnid <- apply_filter(msnid, "numMissCleavages <= 2")
 show(msnid)
 ```
 
-## Parent ion mass errors
+### Parent ion mass errors
 
 Using `"calculatedMassToCharge"` and `"experimentalMassToCharge"`, the
 `mass_measurement_error` function calculates the parent ion mass
@@ -934,7 +935,7 @@ msnid <- apply_filter(msnid, "abs(mass_measurement_error(msnid)) < 20")
 summary(mass_measurement_error(msnid))
 ```
 
-## Filtering criteria
+### Filtering criteria
 
 Filtering of the identification data will rely on
 
@@ -972,7 +973,7 @@ identifications for the filtering criteria at hand.
 evaluate_filter(msnid, filtObj)
 ```
 
-## Filter optimisation
+### Filter optimisation
 
 Rather than setting filtering values by hand, as shown above, these
 can be set automativally to meet a specific false discovery rate.
@@ -1193,7 +1194,7 @@ Annotated spectra and comparing spectra.
 
 ```{r id1, message=FALSE, fig.width=15, message=FALSE, fig.cap = "Annotating and comparing MS2 spectra."}
 par(mfrow = c(1, 2))
-itraqdata2 <- pickPeaks(itraqdata, verbose = FALSE)
+itraqdata2 <- pickPeaks(itraqdata, verbose = FALSE) ## centroiding
 s <- "SIGFEGDSIGR"
 plot(itraqdata2[[14]], s, main = s)
 plot(itraqdata2[[25]], itraqdata2[[28]], sequences = rep("IMIDLDGTENK", 2))
@@ -1357,7 +1358,11 @@ For raw data processing look at `MSnbase`'s `clean`, `smooth`,
 processing methods.
 
 As an illustration, we show the `pickPeaks` function on the
-`itraqdata` data.
+`itraqdata` data. Centoiding transforms the distribution of M/Z values
+measured for an ion (i.e. a set of M/Z and intensities, first figure
+below) into a single M/Z and intensity pair of values (second figure
+below).
+
 
 ```{r peakpicking, fig.keep = "last", fig.cap = "Peak picking: profile mode."}
 library("ggplot2") ## for coord_cartesian

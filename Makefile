@@ -3,9 +3,9 @@ all:
 	make material.html
 
 %.md: %.Rmd
-	Rscript -e "knitr::knit('$^')"
+	/opt/Rpatched/lib64/R/bin/Rscript -e "knitr::knit('$^')"
 
 %.html: %.md
-	Rscript -e "rmarkdown::render('$^')"
+	/opt/Rpatched/lib64/R/bin/Rscript -e "rmarkdown::render('$^')"
 
 .PHONY: all
