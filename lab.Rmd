@@ -655,6 +655,50 @@ plot(sp, full = TRUE)
 ```
 </details>
 
+## Relations between scans
+
+As seen in the introduction, scans have a hierarchical structure: MS2
+spectra stem form a precursor MS1 scan. This also holds for MS3
+spectra, that are the result from an additional analysis round of MS2
+spectra. When validating quantitative or identification data by
+referring back to raw data, it is often useful to be able to navigate
+this structure.
+
+We will use an experiment with 3 MS levels to do this:
+
+```{r ms3}
+ms3f <- proteomics(pattern = "MS3TMT11", full.names = TRUE)
+basename(ms3f)
+ms3 <- readMSData(ms3f, mode = "onDisk")
+```
+
+> **Exercise** Compute a table showing how many MS1, 2, and 3 level
+> scans are available in this data
+
+<details>
+```{r ms3ex}
+table(msLevel(ms3))
+```
+</details>
+
+
+The `filterPrecursorScan` function takes on raw data object, it's
+acquisition number (get them with `acquisitionNum`), and returns a new
+raw data object containing the children of that spectrum.
+
+> **Exercise** Find the acquisition of the first MS1 spectrum and
+> extract all spectra that originate, directly and indirectly, from
+> it.
+
+<details>
+```{r ms3prec}
+head(msLevel(ms3))
+head(acquisitionNum(ms3))
+(from1 <- filterPrecursorScan(ms3, 21945))
+msLevel(from1)
+```
+</details>
+
 ## Low-level access to raw data
 
 This section illustrates the underlying infrastructure from the `mzR`
