@@ -672,6 +672,9 @@ basename(ms3f)
 ms3 <- readMSData(ms3f, mode = "onDisk")
 ```
 
+Note that it is important to use *on-disk* mode here, as we want to
+retain all MS levels, which isn't possible with *in-memory* mode.
+
 > **Exercise** Compute a table showing how many MS1, 2, and 3 level
 > scans are available in this data
 
