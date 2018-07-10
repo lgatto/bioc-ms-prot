@@ -10,9 +10,9 @@
 - Some packages of interest
 
 Material used as part of the [CSAMA
-2017](http://www.huber.embl.de/csama2017/) course.
+2018](http://www.huber.embl.de/csama2018/) course.
 
-- Read the [slides online](https://rawgit.com/lgatto/bioc-ms-prot/master/slides.html#).
+- The introduction slides are available [here]](http://bit.ly/20180712csama)
 - Read the [lab online](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html)
 
 ## License

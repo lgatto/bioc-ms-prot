@@ -1,5 +1,4 @@
 all:
-	make slides.html
 	make lab.html
 	make material.html
 
