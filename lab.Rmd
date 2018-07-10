@@ -36,7 +36,10 @@ output:
 }
 </style>
 
-<!-- <div class="boxed blue">Beginner</div><div class="boxed purple">Foo</div><div class="boxed yellow">Bar</div><br/> -->
+<!-- <div class="boxed blue">Beginner</div> -->
+<!-- <div class="boxed purple">Foo</div> -->
+<!-- <div class="boxed yellow">On-line</div> -->
+<!-- <div class="boxed wine">Hello</div><br/> -->
 
 
 ```{r env, echo=FALSE, message=FALSE, warning=FALSE}
@@ -208,6 +211,8 @@ execute the code in this workflow.
 
 ## Exploring available infrastructure { - }
 
+<div class="boxed yellow">On-line</div>
+
 ```{r pk, echo=FALSE, warning=FALSE, cache=TRUE}
 biocv <- as.character(biocVersion())
 pp <- proteomicsPackages(biocv)
@@ -349,6 +354,8 @@ data.
 
 ## From the ProteomeXchange database
 
+<div class="boxed yellow">On-line</div>
+
 MS-based proteomics data is disseminated through the
 [ProteomeXchange](http://www.proteomexchange.org/) infrastructure,
 which centrally coordinates submission, storage and dissemination
@@ -391,7 +398,7 @@ Data files can then be downloaded with the `pxget` function. Below, we
 retrieve the raw data file. The file is
 downloaded^[If the file is already available, it is not downloaded a second time.]
 in the working directory and the name of the file is return by the
-function and stored in the `mzf` variable for later use.
+function and stored in the `mzf` variable for later use ^[This and other files are also availabel in the `msdata` package, described below].
 
 ```{r pxget}
 fn <- "TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210.mzML"
@@ -401,6 +408,8 @@ mzf
 
 
 ## From AnnotationHub
+
+<div class="boxed yellow">On-line</div>
 
 `r Biocpkg("AnnotationHub")` is a cloud resource set up and managed by
 the Bioconductor project that serves various omics datasets. It is
@@ -483,7 +492,8 @@ package, that offers quantitative proteomics data.
 
 The `r Biocpkg("MSnbase")` package provides high-level data
 abstractions for raw MS data through the `MSnExp` class and containers
-for quantification data via the `MSnSet` class (see below). Both store
+for quantification data via the `MSnSet` class (see *Quantitative
+proteomics*). Both store
 
 1. the actual assay data (spectra or quantitation matrix, see below),
    accessed with `spectra` (or the `[`, `[[` operators) or `exprs`;
@@ -594,7 +604,7 @@ fromFile(msexp)
 ```
 
 > **Exercise** Repeat the previous combination of raw and
-> identification data with the TMT_Erwinia
+> identification data with the
 > `TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210.mzML.gz`
 > and
 > `TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210.mzid`
@@ -606,7 +616,8 @@ fromFile(msexp)
 <details>
 ```{r answ5, cache=TRUE}
 ## read raw data
-rwf <- proteomics(pattern = "TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210.mzML.gz", full.names = TRUE)
+rwf <- proteomics(pattern = "TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210.mzML.gz",
+                  full.names = TRUE)
 tmterw <- readMSData(rwf, mode = "onDisk")
 ## or, only read MS2-leve data
 ## tmterw <- readMSData(rwf, mode = "onDisk", msLevel = 2L)
@@ -720,7 +731,14 @@ shown above, and is cleaned up:
 
 - only PSMs matching the regular (non-decoy) database are retained;
 - PSMs or rank greater than 1 are discarded;
-- only proteotypic peptides are kept.
+- only proteotypic peptides are kept, i.e. those that match to a
+  unique peptide.
+
+```{r idfilt}
+## at this stage, we still have all the PSMs
+table(iddf$isDecoy)
+table(iddf$rank)
+```
 
 This behaviour can be replicates with the
 `filterIdentificationDataFrame` function.
@@ -893,7 +911,7 @@ Here, we summarise a few steps and redirect the reader to the
 package's vignette for more details:
 
 
-### Analysis of peptide sequences
+### Analysis of peptide sequences {-}
 
 Cleaning irregular cleavages at the termini of the peptides and
 missing cleavage site within the peptide sequences. The following two
@@ -905,7 +923,7 @@ msnid <- assess_termini(msnid, validCleavagePattern="[KR]\\.[^P]")
 msnid <- assess_missed_cleavages(msnid, missedCleavagePattern="[KR](?=[^P$])")
 ```
 
-### Trimming the data
+### Trimming the data {-}
 
 Now, we can use the `apply_filter` function to effectively apply
 filters. The strings passed to the function represent expressions that
@@ -918,7 +936,7 @@ msnid <- apply_filter(msnid, "numMissCleavages <= 2")
 show(msnid)
 ```
 
-### Parent ion mass errors
+### Parent ion mass errors {-}
 
 Using `"calculatedMassToCharge"` and `"experimentalMassToCharge"`, the
 `mass_measurement_error` function calculates the parent ion mass
@@ -935,7 +953,7 @@ msnid <- apply_filter(msnid, "abs(mass_measurement_error(msnid)) < 20")
 summary(mass_measurement_error(msnid))
 ```
 
-### Filtering criteria
+### Filtering criteria {-}
 
 Filtering of the identification data will rely on
 
@@ -973,7 +991,7 @@ identifications for the filtering criteria at hand.
 evaluate_filter(msnid, filtObj)
 ```
 
-### Filter optimisation
+### Filter optimisation {-}
 
 Rather than setting filtering values by hand, as shown above, these
 can be set automativally to meet a specific false discovery rate.
@@ -1250,7 +1268,7 @@ quantitation technologies:
   peptide-spectrum matching confidence assessment.
 * `r Githubpkg("vladpetyuk/N14N15")` for heavy Nitrogen-labelled data.
 
-### Isobaric tagging {-}
+## Isobaric tagging
 
 An `MSnExp` is converted to an `MSnSet` by the `quantitation`
 method. Below, we use the iTRAQ 4-plex isobaric tagging strategy
@@ -1264,7 +1282,7 @@ plot(msexp[[1]], full=TRUE, reporters = iTRAQ4)
 
 ```{r quantitraq}
 msset <- quantify(msexp, method = "max", reporters = iTRAQ4)
-```
+n```
 
 The figure below give a schematics of an `MSnSet` instance and the
 relation between the assay data and the respective feature and sample
@@ -1295,7 +1313,7 @@ processingData(msset)
 from centroided `mgf` peak lists or its own tab-separated files that
 can be generated from Mascot and Phenyx vendor files.
 
-### Spectral counting {-}
+## Spectral counting
 
 Other MS2 quantitation methods available in `quantify` include the
 (normalised) spectral index `SI` and (normalised) spectral abundance
@@ -1318,7 +1336,11 @@ subset of all peptide-spectrum matches, that pass a specific false
 discovery rate threshold can them be converted to an `MSnSet`, where
 the number of peptide occurrences are used to populate the assay data.
 
-# Importing third-party quantitation data
+## Importing third-party quantitation data
+
+### From `MzTab` files {-}
+
+<div class="boxed yellow">On-line</div>
 
 The Proteomics Standard Initiative (PSI) `mzTab` file format is aimed
 at providing a simpler (than XML formats) and more accessible file
@@ -1333,11 +1355,14 @@ mztf <- pxget(px, "F063721.dat-mztab.txt")
 (mzt <- readMzTabData(mztf, what = "PEP", version = "0.9"))
 ```
 
-It is also possible to import arbitrary spreadsheets as `MSnSet`
-objects into R with the `readMSnSet2` function. The main 2 arguments
-of the function are (1) a text-based spreadsheet and (2) column names
-of indices that identify the quantitation data. The latter can be
-queried with the `getEcols` function.
+### From spreadsheets {-}
+
+It is also possible to import arbitrary spreadsheets (such as those
+exported by MaxQuant, ProteomeDiscoverer, ...) as `MSnSet` objects
+into R with the `readMSnSet2` function. The main 2 arguments of the
+function are (1) a text-based spreadsheet and (2) column names of
+indices that identify the quantitation data. The latter can be queried
+with the `getEcols` function.
 
 ```{r readmsnset2}
 csv <- dir(system.file ("extdata" , package = "pRolocdata"),
@@ -1348,6 +1373,36 @@ res <- readMSnSet2(csv, ecols)
 head(exprs(res))
 head(fData(res))
 ```
+
+> **Exercise** Using `readMSnSet2`, load the following file that was
+> part of the supplementary information of a manuscript.
+
+```{r pdfile}
+csvfile <- dir(system.file("extdata", package = "pRolocdata"),
+               pattern = "hyperLOPIT-SIData-ms3-rep12-intersect.csv",
+               full.names = TRUE)
+basename(csvfile)
+```
+
+> You'll first need to identify which columns to use as expression
+> data. In this case however, two rows are used as header, and you'll
+> need to set `n` in `getEcols` to retrieve the appropriate one. There
+> are 20 expresion columns annotated as TMT 10 plex reporter ion M/Z
+> values (if you don't know these, you can find them out by looking at
+> the `TMT10` reporter ion object). You can now use `readMSnSet2`,
+> remembering to skip 1 line and, optionally, use the first column as
+> feature names (see the `fnames` argument). What are the number of
+> features and samples in the data?
+
+
+<details>
+
+```{r solreadmsnset}
+getEcols(csvfile, split = ",", n = 2)
+hl <- readMSnSet2(csvfile, ecol = 8:27, fnames = 1, skip = 1)
+him(hl)
+```
+</details>
 
 # Data processing and analysis
 
@@ -1593,6 +1648,7 @@ head(pData(mulvey2015))
 plot2D(t(mulvey2015),  fcol = "times", fpch = "rep", cex = 2)
 addLegend(t(mulvey2015),  fcol = "times")
 ```
+
 ## Classification
 
 The example below uses `knn` with the 5 closest neighbours and the
