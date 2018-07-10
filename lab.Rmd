@@ -540,6 +540,16 @@ msexp <- addIdentificationData(msexp, identFile)
 ## additional feature variables
 fvarLabels(msexp)
 ```
+
+We see that 3 out of 5 MS2 spectra in the `msexp` data have been
+identified; those that haven't have missing values for the new,
+id-related feature variables.
+
+```{r checkid}
+fData(msexp)$rank
+fData(msexp)$isDecoy
+```
+
 > **Exercise** Load all MS level data from file `MS3TMT11.mzML`
 > available in the `msdata` package using `readMSData`, making sure
 > you set `mode = "onDisk"`, and verify which MS levels (accessible
@@ -690,9 +700,8 @@ file that we load and parse using infrastructure from the
 `r Biocpkg("mzR")` package.
 
 ```{r mzrvsid, eval = TRUE}
-f <- dir(system.file("extdata", package = "RforProteomics"),
-         pattern = "mzid", full.names=TRUE)
-basename(f)
+idf <- msdata::ident(full.names = TRUE)
+basename(idf)
 ```
 
 The easiest way to read identification data in `mzIdentML` (often
@@ -700,9 +709,23 @@ abbreviated with `mzid`) into R is to read it with `readMzIdData`,
 that will parse it, process it, and return a `data.frame`:
 
 ```{r}
-iddf <-readMzIdData(f)
+iddf <- readMzIdData(f)
 head(iddf)
 ```
+
+When adding identification data with the `addIdentificationData`
+function as shown above, the data is read with `readMzIdData`, as
+shown above, and is cleaned up:
+
+- only PSMs matching the regular (non-decoy) database are retained;
+- PSMs or rank greater than 1 are discarded;
+- only proteotypic peptides are kept.
+
+This behaviour can be replicates with the
+`filterIdentificationDataFrame` function.
+
+
+## Low level access
 
 Along the lines of what is available for raw data, the parsing of this
 XML-based format comes from `mzR`. A file handle to `mzIdentML` files
@@ -712,7 +735,7 @@ underlying C/C++ code comes from the
 
 ```{r openid}
 library("mzR")
-id1 <- openIDfile(f)
+id1 <- openIDfile(idf)
 id1
 ```
 
