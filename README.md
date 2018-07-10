@@ -12,7 +12,7 @@
 Material used as part of the [CSAMA
 2018](http://www.huber.embl.de/csama2018/) course.
 
-- The introduction slides are available [here]](http://bit.ly/20180712csama)
+- The introduction slides are available [here](http://bit.ly/20180712csama)
 - Read the [lab online](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html)
 
 ## License

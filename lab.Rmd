@@ -159,6 +159,7 @@ for mass spectrometry and proteomics. If you are interested in
   the `r Biocpkg("Carinal")` walkthrough vignette accessible
   with `vignette("Cardinal-walkthrough", package = "Cardinal")` and
   [online](https://bioconductor.org/packages/release/bioc/vignettes/Cardinal/inst/doc/Cardinal-walkthrough.pdf).
+- ...
 
 ## Setup { - }
 
@@ -194,17 +195,16 @@ Other packages of interest, such as
 will be described later in the document but are not required to
 execute the code in this workflow.
 
-To study the workflow off-line, it is possible to download data files
-as a package in advance^[See details in the *Data packages*
-section.]. Install the dependencies and the package prior to the
-workshop with
+<!-- To study the workflow off-line, it is possible to download data files -->
+<!-- as a package in advance^[See details in the *Data packages* -->
+<!-- section.]. Install the dependencies and the package prior to the -->
+<!-- workshop with -->
 
-```{r pxd1pkg0, eval = FALSE}
-library("BiocInstaller")
-biocLite(c("msdata", "MSnbase", "mzR"))
-biocLite("lgatto/PXD000001")
-```
-
+<!-- ```{r pxd1pkg0, eval = FALSE} -->
+<!-- library("BiocInstaller") -->
+<!-- biocLite(c("msdata", "MSnbase", "mzR")) -->
+<!-- biocLite("lgatto/PXD000001") -->
+<!-- ``` -->
 
 ## Exploring available infrastructure { - }
 
@@ -437,37 +437,208 @@ as the `mzML` (or `mzXML`) file (see below).
 Some data are also distributed through dedicated packages. The
 `r BiocStyle::Biocexptpkg("msdata")`, for example, provides some
 general raw data files relevant for both proteomics and
-metabolomics. More often, such *experiment packages* distribute
-processed data; an example of such is the `r BiocStyle::Biocexptpkg("pRolocdata")`
+metabolomics.
+
+```{r msdatafiles}
+library("msdata")
+## proteomics raw data
+proteomics()
+## proteomics identification data
+ident()
+```
+
+More often, such *experiment packages* distribute processed data; an
+example of such is the `r BiocStyle::Biocexptpkg("pRolocdata")`
 package, that offers quantitative proteomics data.
 
-The files from the *PXD00001* experiment are also available in the
-`r Githubpkg("lgatto/PXD000001")`. This option is convenient when
-online access is absent or unreliable. Install the dependencies and
-the package prior to the workshop with
+<!-- The files from the *PXD00001* experiment are also available in the -->
+<!-- `r Githubpkg("lgatto/PXD000001")`. This option is convenient when -->
+<!-- online access is absent or unreliable. Install the dependencies and -->
+<!-- the package prior to the workshop with -->
 
-```{r pxd1pkg, eval = FALSE}
-library("BiocInstaller")
-biocLite(c("msdata", "MSnbase", "mzR"))
-biocLite("lgatto/PXD0001")
-```
+<!-- ```{r pxd1pkg, eval = FALSE} -->
+<!-- library("BiocInstaller") -->
+<!-- biocLite(c("msdata", "MSnbase", "mzR")) -->
+<!-- biocLite("lgatto/PXD0001") -->
+<!-- ``` -->
 
-The `r Githubpkg("lgatto/PXD000001")` packages provides the `px1files`
-and `px1get` functions as a drop-in replacement for the `pxfiles` and
-`pxget` function from `r Biocpkg("rpx")` package, for the *PXD000001*
-dataset.
+<!-- The `r Githubpkg("lgatto/PXD000001")` packages provides the `px1files` -->
+<!-- and `px1get` functions as a drop-in replacement for the `pxfiles` and -->
+<!-- `pxget` function from `r Biocpkg("rpx")` package, for the *PXD000001* -->
+<!-- dataset. -->
 
-```{r unlinkfas, echo=FALSE}
-unlink("erwinia_carotovora.fasta")
-```
+<!-- ```{r unlinkfas, echo=FALSE} -->
+<!-- unlink("erwinia_carotovora.fasta") -->
+<!-- ``` -->
 
-```{r pxd1pkg2}
-library("PXD000001")
-px1files()
-px1get("erwinia_carotovora.fasta")
-```
+<!-- ```{r pxd1pkg2} -->
+<!-- library("PXD000001") -->
+<!-- px1files() -->
+<!-- px1get("erwinia_carotovora.fasta") -->
+<!-- ``` -->
 
 # Handling raw MS data
+
+## High-level data structures
+
+The `r Biocpkg("MSnbase")` package provides high-level data
+abstractions for raw MS data through the `MSnExp` class and containers
+for quantification data via the `MSnSet` class (see below). Both store
+
+1. the actual assay data (spectra or quantitation matrix, see below),
+   accessed with `spectra` (or the `[`, `[[` operators) or `exprs`;
+2. sample metadata, accessed as a `data.frame` with `pData`;
+3. feature metadata, accessed as a `data.frame` with `fData`.
+
+Another useful slot is `processingData`, accessed with
+`processingData(.)`, that records all the processing that objects have
+undergone since their creation (see examples below).
+
+## Raw data: the `MSnExp` class
+
+The `readMSData` will parse the raw data and construct an MS
+experiment object of class `MSnExp`. An important argument to
+`readMSData` is the `mode`, which can be `"onDisk"` or
+`"inMemory"`. The former doesn't load the raw data in memory (which is
+not advised for MS1 data, or when many files are loaded) and is
+generally the recommended mode. See the `benchmarking` vignette[^Open
+it with `vignette("benchmarking", package = "MSnbase")` or read it
+[online](https://bioconductor.org/packages/release/bioc/vignettes/MSnbase/inst/doc/benchmarking.html)]
+for details).
+
+```{r msnbase}
+library("MSnbase")
+## get a small test data
+rawFile <- dir(system.file(package = "MSnbase", dir = "extdata"),
+               full.name = TRUE, pattern = "mzXML$")
+basename(rawFile)
+msexp <- readMSData(rawFile, msLevel = 2L)
+msexp
+```
+
+Spectra can be extracted as a list of `Spectrum2` objects with the
+`spectra` accessor or as a subset of the original `MSnExp` data with
+the `[` operator.  Individual spectra can be accessed with `[[`.
+
+```{r msnb2}
+length(msexp)
+msexp[1:2]
+msexp[[2]]
+```
+
+The identification results stemming from the same raw data file can
+then be used to add PSM matches.
+
+```{r addid}
+## initial feature variable
+fData(msexp)
+## find path to a mzIdentML file
+identFile <- dir(system.file(package = "MSnbase", dir = "extdata"),
+                 full.name = TRUE, pattern = "dummyiTRAQ.mzid")
+basename(identFile)
+msexp <- addIdentificationData(msexp, identFile)
+## additional feature variables
+fvarLabels(msexp)
+```
+> **Exercise** Load all MS level data from file `MS3TMT11.mzML`
+> available in the `msdata` package using `readMSData`, making sure
+> you set `mode = "onDisk"`, and verify which MS levels (accessible
+> with the `msLevel` function) are centroided (accessible with the
+> `centroided()` function).
+
+<details>
+```{r answ3}
+f <- proteomics(full.names = TRUE, pattern = "MS3TMT11.mzML")
+ms <- readMSData(f, mode = "onDisk")
+table(centroided(ms), msLevel(ms))
+```
+</details>
+
+Spectra and (parts of) experiments can be extracted and plotted.
+
+```{r specplot, fig.cap="Plotting a object of class `Spectrum`."}
+msexp[[1]]
+plot(msexp[[1]], full=TRUE)
+```
+
+As this data was labeled with iTRAQ4 isobaric tags, we can highlight
+these four peaks of interest with
+
+```{r specplot1, fig.cap="Plotting a object of class `Spectrum` with reporter ions."}
+plot(msexp[[1]], full=TRUE, reporters = iTRAQ4)
+```
+
+```{r specplot2, fig.cap="Plotting a object of class `MSnExp`"}
+msexp[1:3]
+plot(msexp[1:3], full=TRUE)
+```
+
+In the examples ablove, we only used a single file as input to
+`readMSData`, but multiple file can be read into a single `MSnExp`
+object. The origin of the spectra can be accessed with the `fromFile`
+function:
+
+```{r fromfiles}
+fromFile(msexp)
+```
+
+> **Exercise** Repeat the previous combination of raw and
+> identification data with the TMT_Erwinia
+> `TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210.mzML.gz`
+> and
+> `TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210.mzid`
+> files from `msdata`. Retain only MS level data; this can be done
+> either when reading the data in (see the `msLevel` argument in
+> `?readMSData`) or can be done afterwards by filtering the MS levels
+> with `filterMsLevel`.
+
+<details>
+```{r answ5, cache=TRUE}
+## read raw data
+rwf <- proteomics(pattern = "TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210.mzML.gz", full.names = TRUE)
+tmterw <- readMSData(rwf, mode = "onDisk")
+## or, only read MS2-leve data
+## tmterw <- readMSData(rwf, mode = "onDisk", msLevel = 2L)
+
+## add identification data
+idf <- ident(full.names = TRUE)
+tmterw <- addIdentificationData(tmterw, idf)
+
+tmterw2 <- filterMsLevel(tmterw, 2L)
+```
+
+```{r answ5b, eval=FALSE}
+## It is also possible to chain operations
+library("magrittr")
+tmterw2 <- rwf %>%
+    readMSData(mode = "onDisk") %>%
+    addIdentificationData(idf) %>%
+    filterMsLevel(2L)
+```
+</details>
+
+
+> **Exercise** Still using the
+> `TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210`
+> data from the previous exercise, identify the index of the MS2
+> spectrum with the highest precursor intensity (see the
+> `precursorIntensity` feature variable) and plot it as illustrated
+> above.
+
+<details>
+```{r answ1}
+i <- which.max(precursorIntensity(tmterw2))
+sp <- tmterw2[[i]]
+plot(sp, full = TRUE)
+```
+</details>
+
+## Low-level access to raw data
+
+This section illustrates the underlying infrastructure from the `mzR`
+package, that is used by `MSnbase` under the hood. It is recommended
+to use the high level interfaces, as it supports multiple files and
+does data integrity checks throughout the data processing.
 
 The `mzR` package provides an interface to the
 [proteowizard](http://proteowizard.sourceforge.net/) C/C++ code base
@@ -511,38 +682,8 @@ head(peaks(ms, 1000))
 plot(peaks(ms, 1000), type = "h", xlab = "M/Z", ylab = "Intensity")
 ```
 
-> **Exercise** Identify the index of the MS2 spectrum with the highest
-> precursor intensity (see the `precursorIntensity` feature variable)
-> and plot it as illustrated above.
-
-<details>
-```{r answ1}
-i <- which.max(hd$precursorIntensity)
-sp <- spectra(ms, i)
-plot(sp, type = "h", xlab = "M/Z", ylab = "Intensity")
-```
-</details>
-
-> **Exercise** Are the MS1 and MS2 spectra in profile mode or
-> centroided? Choose any spectra and plot the region around a peak to
-> find out.
-
-<details>
-```{r answ2, fig.width=14, fig.height=7}
-par(mfrow = c(1, 2))
-bpmz <- hd[i, "basePeakMZ"]
-plot(sp, type = "h", xlim = c(bpmz - 0.5, bpmz + 0.5),
-     xlab = "M/Z", ylab = "Intensity",
-     main = "Centroided")
-## Spectrum 100 is MS1
-sp1 <- peaks(ms, 100)
-plot(sp1, type = "l", xlim = c(536,540),
-     xlab = "M/Z", ylab = "Intensity",
-     main = "Profile mode")
-```
-</details>
-
 # Handling identification data
+
 
 The `RforProteomics` package distributes a small identification result
 file that we load and parse using infrastructure from the
@@ -554,10 +695,20 @@ f <- dir(system.file("extdata", package = "RforProteomics"),
 basename(f)
 ```
 
-Along the lines of what is available for raw
-data, it provides support fasta parsing `mzIdentML` files with the
-`openIDfile` function. As for raw data, the underlying C/C++ code
-comes from the [proteowizard](http://proteowizard.sourceforge.net/).
+The easiest way to read identification data in `mzIdentML` (often
+abbreviated with `mzid`) into R is to read it with `readMzIdData`,
+that will parse it, process it, and return a `data.frame`:
+
+```{r}
+iddf <-readMzIdData(f)
+head(iddf)
+```
+
+Along the lines of what is available for raw data, the parsing of this
+XML-based format comes from `mzR`. A file handle to `mzIdentML` files
+can be created with the `openIDfile` function. As for raw data, the
+underlying C/C++ code comes from the
+[proteowizard](http://proteowizard.sourceforge.net/).
 
 ```{r openid}
 library("mzR")
@@ -601,13 +752,17 @@ slower.
 <details>
 ```{r answid1, fig.cap="Identifcation data wrangling 1"}
 suppressPackageStartupMessages(library("dplyr"))
-fid1$peplen <- nchar(as.character(fid1$sequence))
-ids <- as_tibble(full_join(fid1, sc1))
-npeps <- ids %>% group_by(DatabaseDescription) %>% tally
-ids <- full_join(ids, npeps)
+iddf <- as_tibble(iddf) %>%
+    mutate(peplen = nchar(as.character(sequence)))
+npeps <- iddf %>%
+    group_by(DatabaseDescription) %>%
+    tally
+iddf <- full_join(iddf, npeps)
+
 library("ggplot2")
 ggplot(ids, aes(x = n, y = DBseqLength)) + geom_point()
 ```
+
 ```{r answid2, fig.cap="Identifcation data wrangling 2"}
 ids$evalBins <- cut(ids$MS.GF.EValue, summary(ids$MS.GF.EValue))
 ggplot(ids, aes(x = n, y = DBseqLength, color = peplen)) +
@@ -832,120 +987,6 @@ The resulting filtered identification data can be exported to a
 quantitative MS data, described below, and further processed and
 analyses using appropriate statistical tests.
 
-
-# High-level data interface
-
-The above sections introduced low-level interfaces to raw and
-identification results. The `r Biocpkg("MSnbase")` package provides
-abstractions for raw data through the `MSnExp` class and containers
-for quantification data via the `MSnSet` class. Both store
-
-1. the actual assay data (spectra or quantitation matrix, see below),
-   accessed with `spectra` (or the `[`, `[[` operators) or `exprs`;
-2. sample metadata, accessed as a `data.frame` with `pData`;
-3. feature metadata, accessed as a `data.frame` with `fData`.
-
-
-Another useful slot is `processingData`, accessed with
-`processingData(.)`, that records all the processing that objects have
-undergone since their creation (see examples below).
-
-The `readMSData2` (there is also a `readMSData` variant - see the `benchmarking` vignette[^Open it with `vignette("benchmarking", package = "MSnbase")` or read it [online](https://bioconductor.org/packages/release/bioc/vignettes/MSnbase/inst/doc/benchmarking.html)]
-in `r Biocpkg("MSnbase")` for their differences) will parse the raw
-data, extract all MS spectra (by default, but individual MS levels can
-selected, as illustrated below) and construct an MS experiment object
-of class `MSnExp`.
-
-```{r msnbase}
-library("MSnbase")
-rawFile <- dir(system.file(package = "MSnbase", dir = "extdata"),
-               full.name = TRUE, pattern = "mzXML$")
-basename(rawFile)
-msexp <- readMSData2(rawFile, msLevel = 2L)
-msexp
-```
-
-MS2 spectra can be extracted as a list of `Spectrum2` objects with the
-`spectra` accessor or as a subset of the original `MSnExp` data with
-the `[` operator.  Individual spectra can be accessed with `[[`.
-
-```{r msnb2}
-length(msexp)
-msexp[1:2]
-msexp[[2]]
-```
-
-The identification results stemming from the same raw data file can
-then be used to add PSM matches.
-
-```{r addid}
-fData(msexp)
-## find path to a mzIdentML file
-identFile <- dir(system.file(package = "MSnbase", dir = "extdata"),
-                 full.name = TRUE, pattern = "dummyiTRAQ.mzid")
-basename(identFile)
-msexp <- addIdentificationData(msexp, identFile)
-fvarLabels(msexp)
-```
-
-The `readMSData2` (`readMSdata`) and `addIdentificationData` make use
-of the `mzR` and `mzID` packages to access the raw and identification
-data.
-
-> **Exercise** Are the spectra in the `msexp` object centroided? This
-> time, instead of looking at the spectra, we can query (and set) this
-> information directly using the `centroided` function (and
-> `centroided<-` replacement function). The `isCentroided` function
-> can be used to assess the mode from the data.
-
-<details>
-```{r answ3}
-centroided(msexp)
-isCentroided(msexp)
-centroided(msexp) <- isCentroided(msexp)
-```
-</details>
-
-Spectra and (parts of) experiments can be extracted and plotted.
-
-```{r specplot, fig.cap="Plotting a object of class `Spectrum`."}
-msexp[[1]]
-plot(msexp[[1]], full=TRUE)
-```
-
-As this data was labeled with iTRAQ4 isobaric tags, we can highlight
-these four peaks of interest with
-
-```{r specplot1, fig.cap="Plotting a object of class `Spectrum` with reporter ions."}
-plot(msexp[[1]], full=TRUE, reporters = iTRAQ4)
-```
-
-```{r specplot2, fig.cap="Plotting a object of class `MSnExp`"}
-msexp[1:3]
-plot(msexp[1:3], full=TRUE)
-```
-
-> **Exercise** Repeat the previous combination of raw and
-> identification data with the TMT_Erwinia `mzML` and `mzid` files
-> that were imported from ProteomeXchange and generated using
-> `r Biocpkg("MSGFplus")` respectively.  Here, we know that the MS1 and
-> MS2 level are in profile mode and centroided respectively. Read the
-> `readMSData2` documentation to set the `centroided.` argument to set
-> these attributes appropriately.
-
-<details>
-```{r answ5, cache=TRUE}
-tmterw <- readMSData2(mzf, centroided = c(FALSE, TRUE))
-table(centroided(tmterw), msLevel(tmterw))
-## Let's filter MS2 spectra after reading (optional) and add the
-## identification data using pipes
-library("magrittr")
-tmterw <- tmterw %>%
-    filterMsLevel(2L) %>%
-    addIdentificationData(idres)
-tmterw
-```
-</details>
 
 # Visualisation
 
