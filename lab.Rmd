@@ -753,6 +753,8 @@ head(peaks(ms, 1000))
 plot(peaks(ms, 1000), type = "h", xlab = "M/Z", ylab = "Intensity")
 ```
 
+See also this short [video](https://youtu.be/KwCRV885Z-k).
+
 ## A bit more raw data visualisation
 
 Below, we illustrate some additional visualisation and animations of
