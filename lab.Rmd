@@ -1687,13 +1687,13 @@ available via the `r Biocpkg("hpar")` package.
 
 # More information
 
-## References and resources
+## References and resources {-}
 
 * [Visualisation of proteomics data using R and Bioconductor](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4510819/)
 * [Using R and Bioconductor for proteomics data analysis](http://arxiv.org/pdf/1305.6559v1.pdf)
 * `RforProteomics`: http://bioconductor.org/packages/RforProteomics
 
-## Other relevant packages/pipelines
+## Other relevant packages/pipelines {-}
 
 - Analysis of post translational modification with `r Biocpkg("isobar")`.
 - Processing and analysis or isobaric tagging mass spectrometry with
@@ -1729,6 +1729,14 @@ available via the `r Biocpkg("hpar")` package.
   Targeted Proteomics
 - `r Biocpkg("SwathXtend")`: SWATH extended library generation and
   statistical data analysis
+
+## More questions {-}
+
+After the workshop, the best place to ask questions about MS-based
+proteomics and relevant Bioconductor package is the Bioconductor
+[support forum](https://support.bioconductor.org/). Tagging you
+question with *Proteomics* or specific package names will alert the
+respective maintainers.
 
 # Session Information
 
