@@ -1,5 +1,5 @@
 ---
-title: "Lab: Bioconductor tools for mass spectrometry and proteomics"
+title: "Bioconductor tools for mass spectrometry and proteomics"
 author:
 - name: Laurent Gatto
 output:
@@ -60,7 +60,7 @@ suppressPackageStartupMessages(library("AnnotationHub"))
 <!-- **Compiled**: `r date()` -->
 
 
-**Abstract** In this workflow, we will use R/Bioconductor packages to
+**Abstract** In this course, we will use R/Bioconductor packages to
 explore, process, visualise and understand mass spectrometry-based
 proteomics data, starting with raw data, and proceeding with
 identification and quantitation data, discussing some of their
@@ -168,8 +168,8 @@ for mass spectrometry and proteomics. If you are interested in
 ## Setup { - }
 
 The follow packages will be used throughout this documents. R version
-`3.3.1` or higher is required to install all the packages using
-`BiocInstaller::biocLite`.
+`3.5` or higher is required to install all the packages using
+`BiocManager::install`.
 
 ```{r setup, message=FALSE, echo=TRUE, warning=FALSE}
 library("mzR")
@@ -190,8 +190,9 @@ more related content), is to install `r Biocannopkg("RforProteomics")`
 with all its dependencies.
 
 ```{r r4pinstall, eval=FALSE}
-library("BiocInstaller")
-biocLite("RforProteomics", dependencies = TRUE)
+if (!require("BiocManager"))
+    install.package("BiocManager")
+BiocManager::install("RforProteomics", dependencies = TRUE)
 ```
 
 Other packages of interest, such as
@@ -205,9 +206,8 @@ execute the code in this workflow.
 <!-- workshop with -->
 
 <!-- ```{r pxd1pkg0, eval = FALSE} -->
-<!-- library("BiocInstaller") -->
-<!-- biocLite(c("msdata", "MSnbase", "mzR")) -->
-<!-- biocLite("lgatto/PXD000001") -->
+<!-- BiocManager::install(c("msdata", "MSnbase", "mzR")) -->
+<!-- BiocManager::install("lgatto/PXD000001") -->
 <!-- ``` -->
 
 ## Exploring available infrastructure { - }
@@ -234,12 +234,16 @@ explored interactively, or looked at by exploring the respective
 [Bioconductor web page](https://bioconductor.org/packages/release/BiocViews.html#___Software).
 
 
-```{r pp, eval=FALSE}
+```{r pp, eval = TRUE, warning = FALSE, fig.cap = "Exploring proteomics packages"}
 library("RforProteomics")
 pp <- proteomicsPackages()
-display(pp)
+DT::datatable(pp)
 ```
 
+> **Exercise** Explore available proteomics packages using the
+> `proteomicsPackages()` function above or the [Bioconductor software
+> page](https://bioconductor.org/packages/release/BiocViews.html#___Software). What
+> software could you use to analyse `mzML` files?
 
 ## Mass spectrometry data { - }
 
@@ -468,8 +472,8 @@ package, that offers quantitative proteomics data.
 
 <!-- ```{r pxd1pkg, eval = FALSE} -->
 <!-- library("BiocInstaller") -->
-<!-- biocLite(c("msdata", "MSnbase", "mzR")) -->
-<!-- biocLite("lgatto/PXD0001") -->
+<!-- BiocManager::install(c("msdata", "MSnbase", "mzR")) -->
+<!-- BiocManager::install("lgatto/PXD0001") -->
 <!-- ``` -->
 
 <!-- The `r Githubpkg("lgatto/PXD000001")` packages provides the `px1files` -->
@@ -546,7 +550,7 @@ We can also extract the chromatogram for the acquistion(s) in the
 from the `msdata` package, and read it with *on-disk* mode and focus
 on MS1 data, which is used to generate chromatograms.
 
-```{r chrom1, cache = TRUE}
+```{r chrom1, cache = TRUE, fig.caption = "Chromatogram of TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01-20141210.mzML."}
 f <- msdata::proteomics(pattern = "45stepped_60min_01-20141210", full.names = TRUE)
 rw <- readMSData(f, mode = "onDisk", msLevel. = 1L)
 chr <- chromatogram(rw)
@@ -783,6 +787,16 @@ plot(peaks(ms, 1000), type = "h", xlab = "M/Z", ylab = "Intensity")
 ```
 
 See also this short [video](https://youtu.be/KwCRV885Z-k).
+
+In general, it is highly advised to use the high-level interface
+`MSnExp` provided by `MSnbase` to access and manipulate raw data for
+the following reasons:
+
+- it provides easy and safe accessor and filtering functions;
+- it is compatible to data processing;
+- it handles multiple files/acquisitions;
+- it uses cached on-disk access and is as fast as the low-level
+  interface.
 
 ## A bit more raw data visualisation
 
@@ -1230,6 +1244,17 @@ quantitation technologies:
   peptide-spectrum matching confidence assessment.
 * `r Githubpkg("vladpetyuk/N14N15")` for heavy Nitrogen-labelled data.
 
+## The `MSnSet` class for quantitative data
+
+Quantitative data is stored in a dedicated data structure called
+`MSnSet`. The figure below gives a schematics of an `MSnSet` instance
+and the relation between the assay data and the respective feature and
+sample metadata, accessible respectively with the `exprs`, `fData` and
+`pData` functions.
+
+![MSnSet structure](./Figures/msnset.png)
+
+
 ## Isobaric tagging
 
 An `MSnExp` is converted to an `MSnSet` by the `quantitation`
@@ -1246,18 +1271,20 @@ plot(msexp[[1]], full=TRUE, reporters = iTRAQ4)
 msset <- quantify(msexp, method = "max", reporters = iTRAQ4)
 ```
 
-The figure below give a schematics of an `MSnSet` instance and the
-relation between the assay data and the respective feature and sample
-metadata, accessible respectively with the `exprs`, `fData` and
-`pData` functions.
+Below, we access the quantitative and metadata slots of the newly
+created `MSnSet` object.
 
-![MSnSet structure](./Figures/msnset.png)
+
+```{r msnsetslots1}
+exprs(msset)
+head(fData(msset))
+pData(msset)
+```
 
 New columns can be added to the metadata slots.
 
-```{r msnsetslots}
-exprs(msset)
-pData(msset)
+
+```{r msnsetslots2}
 pData(msset)$groups <- rep(c("Treat", "Cond"), each = 2)
 pData(msset)
 ```
@@ -1267,7 +1294,7 @@ Another useful slot is `processingData`, accessed with
 undergone since their creation.
 
 
-```{r msnsetslots2}
+```{r msnsetslots3}
 processingData(msset)
 ```
 
