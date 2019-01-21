@@ -1435,7 +1435,9 @@ The `r Biocpkg("MALDIquant")` and `r Biocpkg("xcms")` packages also
 features a wide range of raw data processing methods on their own ad
 hoc data instance types.
 
-## Processing and normalisation
+## Quantitative data processing and normalisation
+
+### Isobaric purity correction {-}
 
 Each different types of quantitative data will require their own
 pre-processing and normalisation steps. Both `isobar` and `MSnbase`
@@ -1456,6 +1458,8 @@ qnt <- purityCorrect(qnt, impurities)
 processingData(qnt)
 ```
 
+### Normalisation {-}
+
 Various normalisation methods can be applied the `MSnSet` instances
 using the `normalise` method: variance stabilisation (`vsn`), quantile
 (`quantiles`), median or mean centring (`center.media` or
@@ -1466,6 +1470,7 @@ qnt <- normalise(qnt, "quantiles")
 processingData(qnt)
 ```
 
+### Combining features {-}
 
 The `combineFeatures` method combines spectra/peptides quantitation
 values into protein data. The grouping is defined by the `groupBy`
@@ -1473,8 +1478,7 @@ parameter, which is generally taken from the feature metadata (protein
 accessions, for example).
 
 ```{r comb}
-gb <- fData(qnt)$ProteinDescription
-prt <- combineFeatures(qnt, groupBy = gb, fun = "median")
+prt <- combineFeatures(qnt, fcol = "ProteinDescription", fun = "median")
 processingData(prt)
 ```
 
@@ -1571,6 +1575,62 @@ processingData(tmp)
 
 There are various methods to perform data imputation, as described in
 `?impute`.
+
+> **Exercise** Following the example above, apply a mixed imputation,
+> using knn for data missing at random and the deterministic minumum
+> left-cencored imputation for data missing no at random.
+
+
+<details>
+```{r naex1, message = FALSE}
+impute(naset, "mixed",
+       randna = fData(naset)$randna,
+       mar = "knn", mnar = "MinDet")
+```
+</details>
+
+> **Exercise** When assessing missing data imputation methods, such as
+> in [Lazar et
+> al. (2016)](https://pubs.acs.org/doi/abs/10.1021/acs.jproteome.5b00981),
+> one often replaces values with missing data, imputes these with a
+> method of choice, then quantifies the difference between original
+> (expected) and observed (imputed) values. Here, using the `naset`
+> data, use this strategy to assess the difference between knn and
+> Bayesian PCA imputation.
+
+<details>
+```{r naex2, cache = TRUE}
+imp1 <- impute(naset, method = "knn")
+imp2 <- impute(naset, method = "bpca")
+summary(abs(exprs(imp1)[is.na(naset)] - exprs(imp2)[is.na(naset)]))
+summary(as.numeric(na.omit(exprs(naset))))
+```
+</details>
+
+> **Exercise** When assessing the impact of missing value imputation
+> on real data, one can't use the strategy above. Another useful
+> approach is to assess the impact of the imputation method on the
+> distribution of the quantitative data. For instance, here is the
+> intensity distribution of the `naset` data. Verify the effect of
+> applying `knn`, `zero`, `MinDet` and `bpca` on this distribution.
+
+```{r nasetdist, fig.cap = "Intensity disctribution of the `naset` data."}
+plot(density(na.omit(exprs(naset))))
+```
+
+<details>
+```{r naex3, cache = TRUE}
+cls <- c("black", "red", "blue", "steelblue", "orange")
+plot(density(na.omit(exprs(naset))), col = cls[1])
+lines(density(exprs(impute(naset, method = "knn"))), col = cls[2])
+lines(density(exprs(impute(naset, method = "zero"))), col = cls[3])
+lines(density(exprs(impute(naset, method = "MinDet"))), col = cls[4])
+lines(density(exprs(impute(naset, method = "bpca"))), col = cls[5])
+legend("topright", legend = c("orig", "knn", "zero", "MinDet", "bpca"),
+       col = cls, lwd = 2, bty = "n")
+```
+</details>
+
 
 # Statistical analysis
 
