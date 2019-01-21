@@ -2,6 +2,7 @@
 title: "Bioconductor tools for mass spectrometry and proteomics"
 author:
 - name: Laurent Gatto
+  affiliation: "de Duve Institute, UCLouvain, Belgium"
 output:
   BiocStyle::html_document:
     toc_float: true
