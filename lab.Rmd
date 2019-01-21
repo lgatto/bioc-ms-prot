@@ -54,6 +54,7 @@ suppressPackageStartupMessages(library("lattice"))
 suppressPackageStartupMessages(library("gridExtra"))
 suppressPackageStartupMessages(library("pRoloc"))
 suppressPackageStartupMessages(library("AnnotationHub"))
+suppressPackageStartupMessages(library("ensembldb"))
 ```
 
 <!-- **Modified:** `r file.info("lab.Rmd")$mtime`<br /> -->
@@ -1252,7 +1253,20 @@ and the relation between the assay data and the respective feature and
 sample metadata, accessible respectively with the `exprs`, `fData` and
 `pData` functions.
 
-![MSnSet structure](./Figures/msnset.png)
+![The MSnSet structure](./Figures/msnset.png)
+
+
+Storing quantitative data in an `MSnSet` quaranties that the feature
+(peptides or proteins) and sample annotations are correctly aligned
+with the quantitative data, i.e.
+
+- there is a one-to-one match between the expression data rows and
+  feature meta data rows;
+- there is a one-to-one match between the expression data columns and
+  sample meta data rows.
+
+This correspondance is also guaranteed during all data processing and
+manipulation.
 
 
 ## Isobaric tagging
@@ -1297,10 +1311,6 @@ undergone since their creation.
 ```{r msnsetslots3}
 processingData(msset)
 ```
-
-**See also** The `r Biocpkg("isobar")` package supports quantitation
-from centroided `mgf` peak lists or its own tab-separated files that
-can be generated from Mascot and Phenyx vendor files.
 
 ## Spectral counting
 
@@ -1417,7 +1427,7 @@ plot(itraqdata[[10]], full = TRUE) +
 
 ```{r peakpicking2, fig.keep = "last", fig.cap = "Peak picking: centroided."}
 itraqdata2 <- pickPeaks(itraqdata)
-plot(itraqdata2[[10]], full = TRUE, w1 = 0.05) +
+plot(itraqdata2[[10]], full = TRUE) +
     coord_cartesian(xlim = c(915, 925))
 ```
 
@@ -1568,10 +1578,9 @@ R in general and Bioconductor in particular are well suited for the
 statistical analysis of data of quantitative proteomics data. Several
 packages provide dedicated resources for proteomics data:
 
-- `r Biocpkg("MSstats")`: A set of tools for statistical relative
-  protein significance analysis in Data dependent (DDA), SRM and Data
-  independent acquisition (DIA) experiments. Data stored in
-  `data.frame` or `MSnSet` objects can be used as input.
+- `r Biocpkg("MSstats")` and `r Biocpkg("MSstatsTMT")`: A set of tools
+  for statistical relative protein significanceanalysis in Data dependent
+  (DDA), SRM, Data independent acquisition (DIA) and TMT experiments.
 
 - `r Biocpkg("msmsTests")`: Statistical tests for label-free LC-MS/MS
   data by spectral counts, to discover differentially expressed
@@ -1673,6 +1682,8 @@ plot(kcl, exprs(dunkley2006))
 
 # Annotation
 
+## The `rols` package
+
 ```{r nont, echo=FALSE, cache=TRUE}
 library("rols")
 onts <- Ontologies()
@@ -1682,7 +1693,7 @@ nont <- length(onts)
 All the
 [Bioconductor annotation infrastructure](http://bioconductor.org/help/workflows/annotation/Annotation_Resources/),
 such as `r Biocpkg("biomaRt")`, `r Biocannopkg("GO.db")`,
-organism specific annotations, .. are directly relevant to the
+organism specific annotations, ... are directly relevant to the
 analysis of proteomics data. A total of `r nont` ontologies, including
 some proteomics-centred annotations such as the PSI Mass Spectrometry
 Ontology, Molecular Interaction (PSI MI 2.5) or Protein Modifications
@@ -1705,8 +1716,95 @@ as(res, "Terms")
 as(res, "data.frame")
 ```
 
+## The Human Protein Atlas
+
 Data from the [Human Protein Atlas](http://www.proteinatlas.org/) is
-available via the `r Biocpkg("hpar")` package.
+available via the `r Biocpkg("hpar")` package. Below, we are going to
+illustrate how to use it with a usec ase retrieving sub-cellular
+information for a protein, and contrast it with data from the
+`r Biocpkg("GO.db")` package.
+
+More HPA data are available, as documented in the package manual at
+`?hpar`.
+
+Let's compare the subcellular localisation annotation obtained from
+the HPA subcellular location data set and the information available in
+the Bioconductor annotation packages.
+
+```{r uc-hpar}
+library("hpar")
+id <- "ENSG00000001460"
+getHpa(id, "hpaSubcellularLoc")
+```
+
+Below, we first extract all cellular component GO terms available for
+`id` from the `r Biocannopkg("org.Hs.eg.db")` human annotation and
+then retrieve their term definitions using the `r Biocannopkg("GO.db")`
+database.
+
+```{r uc-db, message = FALSE}
+library("org.Hs.eg.db")
+library("GO.db")
+ans <- AnnotationDbi::select(org.Hs.eg.db, keys = id,
+                             columns = c("ENSEMBL", "GO", "ONTOLOGY"),
+                             keytype = "ENSEMBL")
+ans <- ans[ans$ONTOLOGY == "CC", ]
+ans
+sapply(as.list(GOTERM[ans$GO]), slot, "Term")
+```
+
+
+## The `ensembldb` package
+
+
+The`r Biocannopkg("ensembldb")` allows to query and filter the data from ENSEMBL and integrates
+smoothly with general Bioconductor infrastructure. Below are a couple
+of illustrative examples, and more are available in the package
+vignettes.
+
+
+Below, we initialise the human database:
+
+```{r ensdb}
+library("ensembldb")
+library("EnsDb.Hsapiens.v86")
+edb <- EnsDb.Hsapiens.v86
+edb
+```
+
+Here are the tables and columns available for that database:
+
+```{r dbtabs}
+listTables(edb)
+```
+
+### Fetch protein annotation for genes and transcripts {-}
+
+Protein annotations for (protein coding) transcripts can be retrieved
+by simply adding the desired annotation columns to the `columns` parameter.
+
+```{r edbfetch}
+## Get protein information for ZBTB16 transcripts
+txs <- transcripts(edb, filter = GeneNameFilter("ZBTB16"),
+                   columns = c("protein_id", "uniprot_id", "tx_biotype"))
+txs
+```
+
+### Retrieve proteins from the database {-}
+
+Below, we download the protein sequences for the *ZBTB16* gene.
+
+```{r edbseq}
+prts <- proteins(edb, filter = GeneNameFilter("ZBTB16"),
+                 return.type = "AAStringSet")
+prts
+```
+
+We can also get the associated meta-data with the `mcols` function.
+
+```{r edbmcols}
+mcols(prts)
+```
 
 # More information
 
