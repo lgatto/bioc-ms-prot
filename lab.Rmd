@@ -1632,9 +1632,18 @@ legend("topright", legend = c("orig", "knn", "zero", "MinDet", "bpca"),
 ```
 </details>
 
-## More data analysis
+## Some additional notes on data analysis and manipulation
 
-Mention the `tidies` package here.
+The `tidyverse` syntax has proved to be versatile and very useful for
+generic data analysis, i.e. analysis of data stored in
+dataframes. While it is possible to convert dedicated data containers
+into dataframes, this leads to loosing data integrity checks and
+access to dedicated omics data processing functions.
+
+The `r BiocStyle::Githubpkg("tidies")` enables to use typical dplyr
+functions directly on `MSnSet` data structures. See the vignette at
+[http://lgatto.github.io/tidies/](http://lgatto.github.io/tidies/) for
+details and examples.
 
 # Statistical analysis
 
@@ -1672,7 +1681,11 @@ The data is illustrated below (we will see later how to generate such
 plots), showing two experimental conditions (red and blue points)
 processed as two batches (solid and empty points).
 
-```{r msmspca, echo=FALSE}
+```{r msmspca, echo = FALSE, message = FALSE}
+library(msmsTests)
+data(msms.dataset)
+e <- msms.dataset[rowSums(exprs(msms.dataset)) > 0, ]
+e <- e[!grepl("-R$", featureNames(e)), ]
 plot2D(t(e), fcol = "treat", fpch = "batch")
 ```
 
@@ -1685,8 +1698,8 @@ library(msmsTests)
 data(msms.dataset)
 e <- msms.dataset[rowSums(exprs(msms.dataset)) > 0, ]
 e <- e[!grepl("-R$", featureNames(e)), ]
+pData(e)
 ```
-
 
 ```{r msmsedger}
 null.f <- "y~batch"
