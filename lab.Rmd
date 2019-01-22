@@ -188,7 +188,7 @@ library("hpar")
 library("ensembldb")
 ```
 
-The most convenient way to install all the tutorials requirement (and
+The most convenient way to install most of the tutorials requirement (and
 more related content), is to install `r Biocannopkg("RforProteomics")`
 with all its dependencies.
 
@@ -267,8 +267,8 @@ datatab <-
                    "",
                    "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read)",
                    "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read)"))
-library("knitr")
-kable(datatab)
+
+knitr::kable(datatab)
 ```
 
 # How does mass spectrometry work?
@@ -529,8 +529,10 @@ for details).
 ```{r msnbase}
 library("MSnbase")
 ## get a small test data
-rawFile <- dir(system.file(package = "MSnbase", dir = "extdata"),
-               full.name = TRUE, pattern = "mzXML$")
+rawFile <- dir(system.file(package = "MSnbase",
+                           dir = "extdata"),
+               full.name = TRUE,
+               pattern = "mzXML$")
 basename(rawFile)
 msexp <- readMSData(rawFile, msLevel = 2L)
 msexp
@@ -1230,7 +1232,7 @@ dimnames(qtb) <- list(
     'MS level' = c("MS1", "MS2"),
     'Quantitation' = c("Label-free", "Labelled"))
 
-kable(qtb)
+knitr::kable(qtb)
 ```
 
 In terms of raw data quantitation, most efforts have been devoted to
