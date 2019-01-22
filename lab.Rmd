@@ -185,6 +185,7 @@ library("pRolocdata")
 library("MSGFplus")
 library("rols")
 library("hpar")
+library("ensembldb")
 ```
 
 The most convenient way to install all the tutorials requirement (and
@@ -1851,8 +1852,45 @@ ans
 
 ## Clustering
 
-A wide range of classification and clustering algorithms are available
-in `r Biocpkg("MLInterfaces")`, as described in the `?MLearn`
+To illustrate how to apply clustering in the frame of what we have
+seen so far, we are going to use k-means clustering on the spatial
+proteomics data above, visually comparing the clusters obtains with
+the results of the classification results (in the `svm.classification`
+feature variable).
+
+We are (1) going to perform k-means setting the number of expected
+clusters equal to the number of annotations, (2) store clustering
+results as a new feature variable, and then (3) visualise the results
+next to each other on two PCA plots.
+
+We can use the `kmeans` function, passing the quantiative proteomics
+data and the number of anticipated clusters as input:
+
+```{r cl1}
+## number of sub-cellular niches
+n <- length(getMarkerClasses(hyperLOPIT2015))
+cl <- kmeans(exprs(hyperLOPIT2015, n)
+cl$clusters
+```
+
+We can now add these results to our `MSnSet`:
+
+```{r cl2}
+fData(hyperLOPIT2015)$cluster <- cl$cluster
+```
+
+And now visualise the classification and clustering results side by
+side:
+
+```{r cl3, fig.width = 15, fig.cap = "PCA plot with the classification and clustering results." }
+setStockcol(paste0(getStockcol(), 40))
+par(mfrow = c(1, 2))
+plot2D(hyperLOPIT2015, fcol = "svm.classification")
+plot2D(hyperLOPIT2015, fcol = "cluster")
+```
+
+A wide range of clustering algorithms are available in
+`r Biocpkg("MLInterfaces")`, as described in the `?MLearn`
 documentation page, used below. Below, we show how to use it to
 perform a k-means clustering.
 
