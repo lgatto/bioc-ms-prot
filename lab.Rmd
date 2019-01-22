@@ -1664,7 +1664,8 @@ The `r Biocpkg("MLInterfaces")` package provides a unified interface
 to a wide range of machine learning algorithms. Initially developed
 for microarray and `ExpressionSet` instances, the
 `r Biocpkg("pRoloc")` package enables application of these algorithms
-to `MSnSet` data.
+to `MSnSet` data. We will also demonstrate some specific functions of the
+`r Biocpkg("pRoloc")` package.
 
 ## Dimensionality reduction
 
@@ -1684,8 +1685,9 @@ profiles reflect the proteins sub-cellular localisation (from
 see also
 [Breckels *et al*, 2016](https://f1000research.com/articles/5-2926/)
 for more data analysis background). We will use the known localisation
-of some proteins (marker proteins) to annotate the plot (using the
-`fcol` argument).
+of some proteins (marker proteins) to annotate the plot using the
+`fcol` argument, that indicates which feature variable (i.e. column un
+the feature meta-data) to use.
 
 ```{r plot2D1, fig.cap="PCA plot for protein sub-cellular localisation."}
 library("pRoloc")
@@ -1695,29 +1697,77 @@ plot2D(hyperLOPIT2015, fcol = "markers")
 addLegend(hyperLOPIT2015, fcol = "markers", cex = .7)
 ```
 
+> **Exercise** The results of a clasification analysis (see below) are
+> available in `svm.classification` feature variable. Repeat the PCA
+> plot above, colouring the proints using this variable.
+
+<details>
+```{r plot2Dex, eval = FALSE}
+plot2D(hyperLOPIT2015, fcol = ""svm.classification"")
+```
+</details>
+
+
 In other cases, we want to visualise the relation of samples. `plot2D`
 uses the rows of the data to perform dimensionality reduction. To use
 the columns, we just need to transpose the `MSnSet`. By doing so, the
 `pData` becomes the `fData` and vice versa.
 
 Let's use a time-course experiment on stem cells
-([Mulvey *et al.* 2015](https://www.ncbi.nlm.nih.gov/pubmed/26059426)). Below,
-we use the `times` (time points) variable to set colours and `rep`
-(replicate numbers) to set the plotting characters.
+([Mulvey *et al.* 2015](https://www.ncbi.nlm.nih.gov/pubmed/26059426)).
+Below, we use the `times` (time points) variable to set colours.
 
 ```{r plot2S2, fig.cap="PCA plots for sample in a time-course experiment."}
 data(mulvey2015)
 head(pData(mulvey2015))
-plot2D(t(mulvey2015),  fcol = "times", fpch = "rep", cex = 2)
+plot2D(t(mulvey2015),  fcol = "times", cex = 2)
 addLegend(t(mulvey2015),  fcol = "times")
+```
+
+> **Exercise** The `plot2D` function can use two feature variables to
+> set colours with the `fcol` argument (as above) and point characters
+> with the `fpch` argument. Use the latter to also highlight the
+> replicate numbers `rep`.
+
+
+```{r plot2Dex2}
+plot2D(t(mulvey2015),  fcol = "times", fpch = "rep", cex = 2)
 ```
 
 ## Classification
 
-The example below uses `knn` with the 5 closest neighbours and the
-`r Biocpkg("MLInterfaces")` package as an illustration to classify
-proteins of unknown sub-cellular localisation to one of 9 possible
-organelles.
+Classification is performed in two steps. First, an adequate model and
+its parameters are learned from labelled training data, then that
+model is applied on new, unlabelled data.
+
+We are going to apply this strategy to repeat the protein sub-cellular
+classification analysis of the `hyperLOPIT2015` data above using a *k*
+nearest neighbour classifier, which is generally used as a baseline
+method. In the interest of time, we will only repeat the optimisation
+step 10 times, even though 100 would be recommended. For details on
+this procedure, please see the [main `pRoloc`
+vignette](https://lgatto.github.io/pRoloc/articles/v01-pRoloc-tutorial.html].
+
+```{r knnopt, cache = TRUE}
+p <- knnOptimisation(hyperLOPIT2015, time = 10)
+p
+```
+
+We can now apply out best model (here *k* = 3) to out dataset, which
+will add feature variables with the classification results (`knn`) and
+scores (`knn.scores`).
+
+
+```{r knnclass}
+hyperLOPIT2015 <- knnClassification(hyperLOPIT2015, p)
+fvarLabels(hyperLOPIT2015)
+```
+
+> **Exercise** Once you have performed the kNN classification as
+> illustrated above, visualise your results on a PCA plot.
+
+Below, we show how to use `r Biocpkg("MLInterfaces")` to perform a
+classification analysis using *k* nearest neighbours.
 
 ```{r ml}
 library("MLInterfaces")
@@ -1730,16 +1780,16 @@ ans
 
 ## Clustering
 
-A wide range of classification and clustering algorithms are also
-available, as described in the `?MLearn` documentation page, used
-below.
+A wide range of classification and clustering algorithms are available
+in `r Biocpkg("MLInterfaces")`, as described in the `?MLearn`
+documentation page, used below. Below, we show how to use it to
+perform a k-means clustering.
 
 ```{r clust, fig.cap = "Kmeans clustering using `r Biocpkg('MLInterfaces')` with an `MSnSet` object."}
 kcl <- MLearn( ~ ., data = dunkley2006, kmeansI, centers = 12)
 kcl
 plot(kcl, exprs(dunkley2006))
 ```
-
 
 # Annotation
 
