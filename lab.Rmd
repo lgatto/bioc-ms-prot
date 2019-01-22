@@ -1660,11 +1660,18 @@ packages provide dedicated resources for proteomics data:
 
 # Machine learning
 
+There are numerous packages for machine learing in R, many with
+specific omics applications and use cases in mind. An excellent
+general package is `r CRANpkg("mlr")` that provides a unified
+interface to many methods. For a general hands-on introduction, [*An
+introduction to machine learning with R*](http://bit.ly/intromlr), as
+well as many other freely available documents are available.
+
 The `r Biocpkg("MLInterfaces")` package provides a unified interface
 to a wide range of machine learning algorithms. Initially developed
-for microarray and `ExpressionSet` instances, the
-`r Biocpkg("pRoloc")` package enables application of these algorithms
-to `MSnSet` data. We will also demonstrate some specific functions of the
+for microarray and `ExpressionSet` instances, the `r
+Biocpkg("pRoloc")` package enables application of these algorithms to
+`MSnSet` data. We will also demonstrate some specific functions of the
 `r Biocpkg("pRoloc")` package.
 
 ## Dimensionality reduction
@@ -1706,7 +1713,6 @@ addLegend(hyperLOPIT2015, fcol = "markers", cex = .7)
 plot2D(hyperLOPIT2015, fcol = ""svm.classification"")
 ```
 </details>
-
 
 In other cases, we want to visualise the relation of samples. `plot2D`
 uses the rows of the data to perform dimensionality reduction. To use
@@ -1756,7 +1762,6 @@ p
 We can now apply out best model (here *k* = 3) to out dataset, which
 will add feature variables with the classification results (`knn`) and
 scores (`knn.scores`).
-
 
 ```{r knnclass}
 hyperLOPIT2015 <- knnClassification(hyperLOPIT2015, p)
