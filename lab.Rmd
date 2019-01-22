@@ -1770,7 +1770,7 @@ fData(e) <- cbind(fData(e), res)
 
 And we conclude with a volcano plot of the results of the test.
 
-```{r volc}
+```{r volc, fig.cap = "Volcano plot."}
 plot(fData(e)$LogFC, -log10(fData(e)$p.value))
 ```
 
