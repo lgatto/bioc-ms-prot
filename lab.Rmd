@@ -1632,6 +1632,9 @@ legend("topright", legend = c("orig", "knn", "zero", "MinDet", "bpca"),
 ```
 </details>
 
+## More data analysis
+
+Mention the `tidies` package here.
 
 # Statistical analysis
 
@@ -1657,6 +1660,56 @@ packages provide dedicated resources for proteomics data:
 - `r Biocpkg("DEP")` provides an integrated analysis workflow for the
   analysis of mass spectrometry proteomics data for differential
   protein expression or differential enrichment.
+
+Others, while not specfic to proteomics, are also recommended, such as
+the `r Biocpkg("limma")` package. When analysing spectral counting
+data, methods for high throughput sequencing data are
+applicable. Below, we illustrate how to apply a typical `edgeR` test
+to count data using the `msms.edgeR` function from the `msmsTests`
+package.
+
+The data is illustrated below (we will see later how to generate such
+plots), showing two experimental conditions (red and blue points)
+processed as two batches (solid and empty points).
+
+```{r msmspca, echo=FALSE}
+plot2D(t(e), fcol = "treat", fpch = "batch")
+```
+
+nWe first pre-process to remove features containing only 0s and
+entries from the reverse database (ending with '-R') (see also the
+`pp.msms.data` function).
+
+```{r msmspp}
+library(msmsTests)
+data(msms.dataset)
+e <- msms.dataset[rowSums(exprs(msms.dataset)) > 0, ]
+e <- e[!grepl("-R$", featureNames(e)), ]
+```
+
+
+```{r msmsedger}
+null.f <- "y~batch"
+alt.f <- "y~treat+batch"
+div <- apply(exprs(e), 2, sum)
+res <- msms.edgeR(e, alt.f, null.f, div = div)
+head(res)
+```
+
+It is best to store the results directly with the quantitative
+data. Below, we first check that the results rownames match the
+feature names and then add it to the feature metadata.
+
+```{r cbindfd}
+identical(rownames(res), featureNames(e))
+fData(e) <- cbind(fData(e), res)
+```
+
+And we conclude with a volcano plot of the results of the test.
+
+```{r volc}
+plot(fData(e)$LogFC, -log10(fData(e)$p.value))
+```
 
 # Machine learning
 
