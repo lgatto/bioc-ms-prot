@@ -1635,7 +1635,7 @@ legend("topright", legend = c("orig", "knn", "zero", "MinDet", "bpca"),
 ```
 </details>
 
-## Some additional notes on data analysis and manipulation
+## Some notes on data analysis and manipulation
 
 The `tidyverse` syntax has proved to be versatile and very useful for
 generic data analysis, i.e. analysis of data stored in
@@ -1648,6 +1648,52 @@ functions directly on `MSnSet` data structures. See the vignette at
 [http://lgatto.github.io/tidies/](http://lgatto.github.io/tidies/) for
 details and examples.
 
+```{r tidies1, warning = FALSE}
+library("tidies")
+data(msnset)
+## Some test sample groups
+msnset$group <- c("A", "A", "B", "B")
+```
+
+```{r tidies2}
+msnset %>%
+    dplyr::select(starts_with("Protein")) %>%
+    fvarLabels
+```
+
+```{r tidies3}
+msnset %>%
+    filter(ProteinAccession == "ENO") %>%
+    exprs
+```
+
+```{r tides4}
+msnset %>% group_by(ProteinAccession) %>%
+    summarise(median(exprs, na.rm = TRUE)) %>%
+    exprs %>%
+    head
+msnset %>% group_by(group) %>%
+    summarise(mean(exprs, na.rm = TRUE)) %>%
+    exprs %>%
+    head
+msnset %>%
+    group_by(charge) %>%
+    summarise(mean(exprs)) %>%
+    group_by(group) %>%
+    summarise(max(exprs, na.rm = TRUE)) %>%
+    exprs
+```
+
+```{r tidies5}
+msnset %>%
+    filterNA() %>%
+    combineFeatures(method = "median", fcol = "ProteinAccession") %>%
+    group_by(group) %>%
+    summarise(mean(exprs)) %>%
+    normalise(method = "quantiles") %>%
+    filter(ProteinAccession %in% c('ENO', 'BSA')) %>%
+    exprs
+```
 
 # Statistical analysis
 
