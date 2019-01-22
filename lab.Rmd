@@ -1646,6 +1646,7 @@ functions directly on `MSnSet` data structures. See the vignette at
 [http://lgatto.github.io/tidies/](http://lgatto.github.io/tidies/) for
 details and examples.
 
+
 # Statistical analysis
 
 R in general and Bioconductor in particular are well suited for the
@@ -1776,8 +1777,8 @@ addLegend(hyperLOPIT2015, fcol = "markers", cex = .7)
 > plot above, colouring the proints using this variable.
 
 <details>
-```{r plot2Dex, eval = FALSE}
-plot2D(hyperLOPIT2015, fcol = ""svm.classification"")
+```{r plot2Dex, fig.cap = "Plotting all the classification results."}
+plot2D(hyperLOPIT2015, fcol = "svm.classification")
 ```
 </details>
 
@@ -1803,9 +1804,11 @@ addLegend(t(mulvey2015),  fcol = "times")
 > replicate numbers `rep`.
 
 
-```{r plot2Dex2}
+<details>
+```{r plot2Dex2, fig.cap = "Using colours and point characters to annotated the plot with `plot2D`."}
 plot2D(t(mulvey2015),  fcol = "times", fpch = "rep", cex = 2)
 ```
+</details>
 
 ## Classification
 
@@ -1821,8 +1824,8 @@ step 10 times, even though 100 would be recommended. For details on
 this procedure, please see the [main `pRoloc`
 vignette](https://lgatto.github.io/pRoloc/articles/v01-pRoloc-tutorial.html].
 
-```{r knnopt, cache = TRUE}
-p <- knnOptimisation(hyperLOPIT2015, time = 10)
+```{r knnopt, cache = TRUE, warning = FALSE}
+p <- knnOptimisation(hyperLOPIT2015, time = 10, verbose = FALSE)
 p
 ```
 
@@ -1837,6 +1840,12 @@ fvarLabels(hyperLOPIT2015)
 
 > **Exercise** Once you have performed the kNN classification as
 > illustrated above, visualise your results on a PCA plot.
+
+<details>
+```{r knnex, eval = FALSE}
+plot2D(hyperLOPIT2015, fcol = "knn")
+```
+</details>
 
 Below, we show how to use `r Biocpkg("MLInterfaces")` to perform a
 classification analysis using *k* nearest neighbours.
@@ -1869,8 +1878,8 @@ data and the number of anticipated clusters as input:
 ```{r cl1}
 ## number of sub-cellular niches
 n <- length(getMarkerClasses(hyperLOPIT2015))
-cl <- kmeans(exprs(hyperLOPIT2015, n)
-cl$clusters
+cl <- kmeans(exprs(hyperLOPIT2015), n)
+table(cl$cluster)
 ```
 
 We can now add these results to our `MSnSet`:
