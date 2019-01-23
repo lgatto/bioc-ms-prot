@@ -640,7 +640,7 @@ msexp[1:3]
 plot(msexp[1:3], full=TRUE)
 ```
 
-In the examples ablove, we only used a single file as input to
+In the examples above, we only used a single file as input to
 `readMSData`, but multiple file can be read into a single `MSnExp`
 object. The origin of the spectra can be accessed with the `fromFile`
 function:
@@ -721,7 +721,7 @@ ms3 <- readMSData(ms3f, mode = "onDisk")
 Note that it is important to use *on-disk* mode here, as we want to
 retain all MS levels, which isn't possible with *in-memory* mode.
 
-> **Exercise** Compute a table showing how many MS1, 2, and 3 level
+> **Exercise** Generate a table showing how many MS1, 2, and 3 level
 > scans are available in this data
 
 <details>
@@ -817,40 +817,40 @@ Below, we illustrate some additional visualisation and animations of
 raw MS data, taken from the `r Biocannopkg("RforProteomics")`
 [visualisation
 vignette](http://bioconductor.org/packages/release/data/experiment/vignettes/RforProteomics/inst/doc/RProtVis.html). On
-the left, we have a heatmap visualisation of a MS map and a 3
-dimensional representation of the same data. On the right, 2 MS1
-spectra in blue and the set of interleaves 10 MS2 spectra.
+the left, we have a heatmap visualisation of a MS map and, in the
+centre, a 3 dimensional representation of the same data. On the right,
+2 MS1 spectra in blue and the set of interleaves 10 MS2 spectra.
 
 ```{r msmap1, message=FALSE, fig.width=15, echo=TRUE, fig.cap = "Plotting MS maps along retention time, MZ range and intensity."}
+msn <- readMSData(mzf, mode = "onDisk")
 
-## (1) Open raw data file
-ms <- openMSfile(mzf)
-## (2) Extract the header information
-hd <- header(ms)
-## (3) MS1 spectra indices
-ms1 <- which(hd$msLevel == 1)
-## (4) Select MS1 spectra with retention time between 30 and 35 minutes
-rtsel <- hd$retentionTime[ms1] / 60 > 30 & hd$retentionTime[ms1] / 60 < 35
-## (5) Indices of the 1st and 2nd MS1 spectra after 30 minutes
-i <- ms1[which(rtsel)][1]
-j <- ms1[which(rtsel)][2]
-## (6) Interleaved MS2 spectra
-ms2 <- (i+1):(j-1)
+## a set of spectra of interest: MS1 spectra eluted
+## between 30 and 35 minutes retention time
+ms1 <- which(msLevel(msn) == 1)
+rtsel <- rtime(msn)[ms1] / 60 > 30 &
+    rtime(msn)[ms1] / 60 < 35
 
-
-## (1) MS space heaptmap
-M <- MSmap(ms, ms1[rtsel], 521, 523, .005, hd)
+## the MS map
+M <- MSmap(msn, scans = ms1[rtsel],
+           lowMz = 521, highMz = 523,
+           resMz = .005)
+## custom colours
 ff <- colorRampPalette(c("yellow", "steelblue"))
 lattice::trellis.par.set(regions=list(col=ff(100)))
+## heatmap
 m1 <- plot(M, aspect = 1, allTicks = FALSE)
-## (2) Same data as (1), in 3 dimenstion
+
+## set 0s to NA for better visualisation
 M@map[msMap(M) == 0] <- NA
 m2 <- plot3D(M, rgl = FALSE)
-## (3) The 2 MS1 and 10 interleaved MS2 spectra from above
-i <- ms1[which(rtsel)][1]
-j <- ms1[which(rtsel)][2]
-M2 <- MSmap(ms, i:j, 100, 1000, 1, hd)
+
+## MS map with MS1 and MS2 spectra
+i <- ms1[which(rtsel)][1] ## 1st MS1
+j <- ms1[which(rtsel)][2] ## 2nd MS1
+## All MS 1 and 2 spectra between i and j
+M2 <- MSmap(msn, i:j, 100, 1000, 1)
 m3 <- plot3D(M2)
+
 gridExtra::grid.arrange(m1, m2, m3, ncol = 3)
 ```
 
