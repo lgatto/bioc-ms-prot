@@ -10,10 +10,19 @@
 - Some packages of interest
 
 Material used as part of the [CSAMA
-2018](http://www.huber.embl.de/csama2018/) course.
+2018](http://www.huber.embl.de/csama2018/) and [Exploring, visualising
+and analysing proteomics data in
+R](https://training.csx.cam.ac.uk/bioinformatics/event/2759559) (Jan
+2019) courses.
 
 - The introduction slides are available [here](http://bit.ly/20180712csama)
 - Read the [lab online](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html)
+
+## Citation
+
+Gatto, Laurent. (2019, January). Bioconductor tools for mass
+spectrometry and
+proteomics. Zenodo. http://doi.org/10.5281/zenodo.2547971
 
 ## License
 

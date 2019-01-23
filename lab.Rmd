@@ -72,11 +72,19 @@ seasoned R users who want to get started with mass spectrometry and
 proteomics, or proteomics practitioners who want to familiarise
 themselves with R and Bioconductor infrastructure.
 
-> This material available under a
-> [**creative common CC-BY**](http://creativecommons.org/licenses/by/4.0/)
-> license. You are free to **share** (copy and redistribute the
-> material in any medium or format) and **adapt** (remix, transform,
-> and build upon the material) for any purpose, even commercially.
+----
+
+This material available under a [**creative common
+CC-BY**](http://creativecommons.org/licenses/by/4.0/) license. You are
+free to **share** (copy and redistribute the material in any medium or
+format) and **adapt** (remix, transform, and build upon the material)
+for any purpose, even commercially.
+
+If you (re-)use this material, please cite the following reference
+
+> Gatto, Laurent. (2019, January). Bioconductor tools for mass
+> spectrometry and
+> proteomics. Zenodo. http://doi.org/10.5281/zenodo.2547971
 
 # Introduction
 
