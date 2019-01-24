@@ -905,7 +905,7 @@ table(iddf2$rank)
 ```
 </details>
 
-> **Exercise** the standard `r CRANpkg("tidyverse")` tools are fit for
+> **Exercise** The standard `r CRANpkg("tidyverse")` tools are fit for
 > data wrangling with identification data. Using the above
 > identification dataframe, calculate the length of each peptide (you
 > can use `nchar` with the peptide sequence `sequence`) and the number
@@ -1231,6 +1231,8 @@ and a dot product of
 
 <details>
 ```{r compspex}
+data(itraqdata)
+itraqdata2 <- pickPeaks(itraqdata, verbose = FALSE)
 compareSpectra(itraqdata2[[25]], itraqdata2[[28]], fun = "common")
 compareSpectra(itraqdata2[[25]], itraqdata2[[28]], fun = "cor")
 compareSpectra(itraqdata2[[25]], itraqdata2[[28]], fun = "dotproduct")
