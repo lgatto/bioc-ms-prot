@@ -905,15 +905,15 @@ table(iddf2$rank)
 ```
 </details>
 
-> **Exercise** Data wrangling with identification data; the standard
-> `r CRANpkg("tidyverse")` tools are fit for purpose here. Extract and
-> combine the PSMs and their scores as described above and combine
-> them. From the available data, calculate the length of each peptide
-> (you can use `nchar` with the peptide sequence `sequence`) and the
-> number of peptides for each protein (`DatabaseDescription`). Plot
-> the length of the proteins for their respective number of
-> peptides. Optionally, stratify the plot by the peptide e-value score
-> (`MS.GF.EValue`) using for example `cut` to define bins.
+> **Exercise** the standard `r CRANpkg("tidyverse")` tools are fit for
+> data wrangling with identification data. Using the above
+> identification dataframe, calculate the length of each peptide (you
+> can use `nchar` with the peptide sequence `sequence`) and the number
+> of peptides for each protein (defined as
+> `DatabaseDescription`). Plot the length of the proteins against
+> their respective number of peptides. Optionally, stratify the plot
+> by the peptide e-value score (`MS.GF.EValue`) using for example
+> `cut` to define bins.
 
 <details>
 ```{r answid1, fig.cap="Identifcation data wrangling 1"}
@@ -1225,6 +1225,17 @@ and a dot product of
 `r round(compareSpectra(itraqdata2[[25]], itraqdata2[[28]], fun = "dotproduct"), 3)`
 (see `?compareSpectra` for details).
 
+> **Exercise** Use the `compareSpectra` function to compare spectra 25
+>  and 28 plotted above, calculating the metrics mentioned
+>  above. Don't forget to pick peaks from `itraqdata` first.
+
+<details>
+```{r compspex}
+compareSpectra(itraqdata2[[25]], itraqdata2[[28]], fun = "common")
+compareSpectra(itraqdata2[[25]], itraqdata2[[28]], fun = "cor")
+compareSpectra(itraqdata2[[25]], itraqdata2[[28]], fun = "dotproduct")
+```
+</details>
 
 # Quantitative proteomics
 
