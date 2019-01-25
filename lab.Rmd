@@ -1463,6 +1463,7 @@ dim(msn)
 msn$batch <- rep(c("A", "B"), each = 10)
 msn$group <- rep(rep(c("CTRL", "COND"), each = 5), 2)
 msn$gender <- rep(c("M", "F"), 10)
+pData(msn)
 ```
 </details>
 
