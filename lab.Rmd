@@ -1599,7 +1599,10 @@ processingData(tmp)
 ```
 
 There are various methods to perform data imputation, as described in
-`?impute`.
+`?impute`. The `r CRANpkg("imp4p")` package contains additional
+functionality, including some to estimate the randomness of missing
+data.
+
 
 > **Exercise** Following the example above, apply a mixed imputation,
 > using knn for data missing at random and the deterministic minumum
