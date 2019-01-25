@@ -625,19 +625,19 @@ Spectra and (parts of) experiments can be extracted and plotted.
 
 ```{r specplot, fig.cap="Plotting an object of class `Spectrum`."}
 msexp[[1]]
-plot(msexp[[1]], full=TRUE)
+plot(msexp[[1]])
 ```
 
 As this data was labeled with iTRAQ4 isobaric tags, we can highlight
-these four peaks of interest with
+these four peaks of interest on top of the full spectrum with
 
 ```{r specplot1, fig.cap="Plotting an object of class `Spectrum` with reporter ions."}
 plot(msexp[[1]], full=TRUE, reporters = iTRAQ4)
 ```
 
-```{r specplot2, fig.cap="Plotting an object of class `MSnExp`"}
+```{r specplot2, fig.cap = "Plotting an object of class `MSnExp`"}
 msexp[1:3]
-plot(msexp[1:3], full=TRUE)
+plot(msexp[1:3], full = TRUE)
 ```
 
 In the examples above, we only used a single file as input to
@@ -1398,6 +1398,31 @@ head(exprs(res))
 head(fData(res))
 ```
 
+However, as we see below, we do not have any metadata about samples,
+i.e. about the design of the experiment.
+
+```{r respd}
+pData(res)
+```
+
+This can be done manually, or by importing a csv file containing that
+design. Below, we define two groups and two operators for the 4
+samples of the `res` object created above:
+
+```{r}
+pData(res)$group <- rep(c("A", "B"), each = 2)
+pData(res)$operator <- rep(1:2, 2)
+pData(res)
+```
+
+Note that `pData(res)$` can be shortened with `res$`. This is also
+valid when setting new metadata, as shown above.
+
+```{r}
+pData(res)$group
+res$group
+```
+
 > **Exercise** Using `readMSnSet2`, load the following file that was
 > part of the supplementary information of a manuscript.
 
@@ -1420,13 +1445,28 @@ basename(csvfile)
 
 
 <details>
-
 ```{r solreadmsnset}
 getEcols(csvfile, split = ",", n = 2)
-hl <- readMSnSet2(csvfile, ecol = 8:27, fnames = 1, skip = 1)
-dim(hl)
+msn <- readMSnSet2(csvfile, ecol = 8:27, fnames = 1, skip = 1)
+dim(msn)
 ```
 </details>
+
+> **Exercise** Add the following experimental design to the `MSnSet`
+> created above. The 10 first samples originate from batch A, and the
+> 10 following from batch B. Sameple 1 to 5 and 11 to 15 belong to the
+> control group, and the others to the condition group. Even samples
+> are female and odd samples are male.
+
+<details>
+```{r solreadmsnset2}
+msn$batch <- rep(c("A", "B"), each = 10)
+msn$group <- rep(rep(c("CTRL", "COND"), each = 5), 2)
+msn$gender <- rep(c("M", "F"), 10)
+```
+</details>
+
+
 
 # Data processing and analysis
 
