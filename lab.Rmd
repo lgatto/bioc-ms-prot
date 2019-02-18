@@ -1528,7 +1528,7 @@ processingData(qnt)
 
 Various normalisation methods can be applied the `MSnSet` instances
 using the `normalise` method: variance stabilisation (`vsn`), quantile
-(`quantiles`), median or mean centring (`center.media` or
+(`quantiles`), median or mean centring (`center.median` or
 `center.mean`), ...
 
 ```{r norm}
