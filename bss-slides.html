@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Mass spectrometry and proteomics</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Laurent Gatto" />
+    <link href="bss-slides_files/remark-css/default.css" rel="stylesheet" />
+    <link href="bss-slides_files/remark-css/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Mass spectrometry and proteomics
+## Using R/Bioconductor
+### <a href="#laurent-gatto">Laurent Gatto</a>
+### <a href="https://uclouvain-cbio.github.io/BSS2019/">BSS2019</a> - UCLouvain - 5 July 2019
+
+---
+
+
+
+
+class: middle
+name: cc-by
+
+### Get the slides at [short URL]().
+
+These slides are available under a **creative common
+[CC-BY license](http://creativecommons.org/licenses/by/4.0/)**. You are
+free to share (copy and redistribute the material in any medium or
+format) and adapt (remix, transform, and build upon the material) for
+any purpose, even commercially
+&lt;img height="20px" alt="CC-BY" src="./img/cc1.jpg" /&gt;.
+
+
+---
+
+class: middle, center, inverse
+
+## On the menu
+
+---
+class: middle
+
+**Overall goal** (with [Lieven
+Clement](https://statomics.github.io/pages/about.html)): quanitative
+proteomics data analysis done right using Bioconductor tools and (some
+of) the best statistical methods.
+
+1. Proteomics in Bioconductor
+2. How does mass spectrometry-based proteomics work?
+3. Quantitative proteomics
+4. Introduction to *[MSnbase](https://bioconductor.org/packages/3.9/MSnbase)*
+
+
+---
+class: middle center
+
+![](./Figures/overview0.png)
+
+???
+
+From a 2011 study that compared the expression profiles of 3 cell
+lines using RNA-Seq, MS-based proteomics and immunofluorescence
+(protein-specific antibodies).
+
+They observed an overall Spearman correlation of 0.63.
+
+**In what ways to these summaries differ?**
+
+Using a common gene-centric identifier, but
+
+- What do we have along the rows, what are our features? Transcripts
+  on the left. Protein groups on the right.
+- How are these intensities produced?
+
+## Take-home message 1
+
+These data tables are less similar than they appear.
+
+
+---
+class: middle, center
+
+## 1. [Proteomics](http://bioconductor.org/packages/release/BiocViews.html#___Proteomics) and [mass spectrometry](http://bioconductor.org/packages/release/BiocViews.html#___MassSpectrometry) packages and [workflow](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html) in Bioconductor.
+
+---
+class: middle, center
+
+## 2. How does mass spectrometry work? 
+
+### (applies to proteomics and metabolomics)
+
+---
+class: middle
+
+### Overview
+
+![](./Figures/overview1.jpg)
+
+---
+### How does MS work?
+
+1. Digestion of proteins into peptides - as will become clear later,
+   the features we measure in shotgun (or bottom-up) *proteomics* are
+   peptides, **not** proteins.
+
+--
+
+2. On-line liquid chromatography (LC-MS)
+
+--
+
+3. Mass spectrometry (MS) is a technology that **separates** charged
+   molecules (ions, peptides) based on their mass to charge ratio
+   (M/Z).
+
+---
+### Chromatography
+
+MS is generally coupled to chromatography (liquid LC, but can also be
+gas-based GC). The time an analytes takes to elute from the
+chromatography column is the **retention time**.
+
+![A chromatogram, illustrating the total amount of analytes over the retention time.](./Figures/chromatogram.png)
+
+???
+
+- This is an acquisition. There can be one per sample (with muliple
+  fractions), of samples can be combined/multiplexed and acquired
+  together.
+
+---
+class: middle
+
+An mass spectrometer is composed of three components:
+
+1. The *source*, that ionises the molecules: examples are Matrix-assisted
+   laser desorption/ionisation (MALDI) or electrospray ionisation
+   (ESI).
+2. The *analyser*, that separates the ions: Time of flight (TOF) or Orbitrap.
+3. The *detector* that quantifies the ions.
+
+Ions typically go through that cylce at least twice (MS2, tandem MS,
+or MSMS). Before the second cycle, individual *precursor* ions a
+selected and broken into *fragment* ions.
+
+---
+class: middle center
+
+![Schematics of a mass spectrometer and two rounds of MS.](./Figures/SchematicMS2.png)
+
+???
+
+Before MS:
+- Restriction with enzyme, typically trypsine.
+- Off-line fractionation.
+
+An mass spectrometer is composed of three components:
+
+1. The *source*, that ionises the molecules: examples are Matrix-assisted
+   laser desorption/ionisation (MALDI) or electrospray ionisation
+   (ESI).
+2. The *analyser*, that separates the ions: Time of flight (TOF) or Orbitrap.
+3. The *detector* that quantifies the ions.
+
+Ions typically go through that cylce at least twice (MS2, tandem MS or
+MSMS). Before the second cycle, individual *precursor* ions a
+selected, broken into fragment ions.
+
+---
+class: middle center
+
+![Separation and detection of ions in a mass spectrometer.](./Figures/mstut.gif)
+
+---
+class: middle center
+
+![Parent ions in the MS1 spectrum (left) and two sected fragment ions MS2 spectra (right).](./Figures/MS1-MS2-spectra.png)
+
+???
+
+Highlight
+- Semi-stochastic nature of MS
+- Data dependent acquisition (DDA)
+
+---
+class: middle center
+
+.left-col-50[
+![MS1 spectra over retention time.](./Figures/F02-3D-MS1-scans-400-1200-lattice.png)
+]
+
+.right-col-50[
+![MS2 spectra interleaved between two MS1 spectra.](./Figures/F02-3D-MS1-MS2-scans-100-1200-lattice.png)
+]
+
+???
+
+- Please keep this MS space and the semi-stochastic nature of MS
+  acquisition in mind , as I will come back to it later.
+
+
+---
+###  Identification: fragment ions
+
+![Peptide fragment ions.](./Figures/frag.png)
+
+
+---
+###  Identification: Peptide-spectrum matching (PSM)
+
+Matching **expected** and *observed* spectra:
+
+```
+&gt; MSnbase::calculateFragments("SIGFEGDSIGR")
+           mz  ion type pos z        seq
+1    88.03931   b1    b   1 1          S
+2   201.12337   b2    b   2 1         SI
+3   258.14483   b3    b   3 1        SIG
+4   405.21324   b4    b   4 1       SIGF
+5   534.25583   b5    b   5 1      SIGFE
+6   591.27729   b6    b   6 1     SIGFEG
+7   706.30423   b7    b   7 1    SIGFEGD
+8   793.33626   b8    b   8 1   SIGFEGDS
+9   906.42032   b9    b   9 1  SIGFEGDSI
+10  963.44178  b10    b  10 1 SIGFEGDSIG
+11  175.11895   y1    y   1 1          R
+12  232.14041   y2    y   2 1         GR
+13  345.22447   y3    y   3 1        IGR
+14  432.25650   y4    y   4 1       SIGR
+15  547.28344   y5    y   5 1      DSIGR
+16  604.30490   y6    y   6 1     GDSIGR
+ [ reached getOption("max.print") -- omitted 16 rows ]
+```
+
+---
+class: middle
+
+###  Identification: Peptide-spectrum matching (PSM)
+
+Matching *expected* and **observed** spectra:
+
+![Peptide fragment matching](./Figures/annotated-spectrum.png)
+
+
+???
+
+Performed by **search engines** such as Mascot, MSGF+, Andromeda, ...
+
+---
+### Identification: database
+
+![Uniprot human proteome](./Figures/uniprot1.png)
+
+???
+
+## [Human proteome](https://www.uniprot.org/help/human_proteome)
+
+In 2008, a draft of the complete human proteome was released from
+UniProtKB/Swiss-Prot: the approximately 20,000 putative human
+protein-coding genes were represented by one UniProtKB/Swiss-Prot
+entry, tagged with the keyword 'Complete proteome' and later linked to
+proteome identifier UP000005640. This UniProtKB/Swiss-Prot H. sapiens
+proteome (manually reviewed) can be considered as complete in the
+sense that it contains one representative (**canonical**) sequence for
+each currently known human gene. Close to 40% of these 20,000 entries
+contain manually annotated alternative isoforms representing over
+22,000 additional sequences
+
+
+## [What is the canonical sequence?](https://www.uniprot.org/help/canonical_and_isoforms)
+
+To reduce redundancy, the UniProtKB/Swiss-Prot policy is to describe
+all the protein products encoded by one gene in a given species in a
+single entry. We choose for each entry a canonical sequence based on
+at least one of the following criteria:
+
+1. It is the most prevalent.
+2. It is the most similar to orthologous sequences found in other species.
+3. By virtue of its length or amino acid composition, it allows the
+   clearest description of domains, isoforms, polymorphisms,
+   post-translational modifications, etc.
+4. In the absence of any information, we choose the longest sequence.
+
+
+## Are all isoforms described in one UniProtKB/Swiss-Prot entry?
+
+Whenever possible, all the protein products encoded by one gene in a
+given species are described in a single UniProtKB/Swiss-Prot entry,
+including isoforms generated by alternative splicing, alternative
+promoter usage, and alternative translation initiation (*). However,
+some alternative splicing isoforms derived from the same gene share
+only a few exons, if any at all, the same for some 'trans-splicing'
+events. In these cases, the divergence is obviously too important to
+merge all protein sequences into a single entry and the isoforms have
+to be described in separate 'external' entries.
+
+## UniProt [downloads](https://www.uniprot.org/downloads)
+
+---
+class: middle
+
+### Identification
+
+![Decoy databases and peptide scoring](./Figures/pr-2007-00739d_0004.gif)
+
+From Käll *et al.* [Posterior Error Probabilities and False Discovery
+Rates: Two Sides of the Same Coin](https://pubs.acs.org/doi/abs/10.1021/pr700739d).
+
+???
+
+
+- (global) FDR = B/(A+B)
+- (local) fdr = PEP = b/(a+b)
+
+
+---
+###  Identification: Protein inference
+
+- Keep only reliable peptides
+- From these peptides, infer proteins
+- If proteins can't be resolved due to shared peptides, merge them
+  into **protein groups** of indistinguishable or non-differentiable
+  proteins.
+
+
+---
+class: middle
+
+![Peptide evidence classes](./Figures/nbt0710-647-F2.gif)
+
+From [Qeli and Ahrens
+(2010)](http://www.ncbi.nlm.nih.gov/pubmed/20622826).
+
+
+---
+class: middle, center
+
+## 3. Quantitative proteomics 
+
+
+---
+class: middle
+
+|    |Label-free |Labelled   |
+|:---|:----------|:----------|
+|MS1 |XIC        |SILAC, 15N |
+|MS2 |Counting   |iTRAQ, TMT |
+
+.left-col-50[
+![MS1 spectra over retention time.](./Figures/F02-3D-MS1-scans-400-1200-lattice.png)
+]
+
+.right-col-50[
+![MS2 spectra interleaved between two MS1 spectra.](./Figures/F02-3D-MS1-MS2-scans-100-1200-lattice.png)
+]
+
+---
+class: middle center
+
+### Label-free MS2: Spectral counting
+
+![](./Figures/pbase.png)
+
+From the [Pbase](https://bioconductor.org/packages/release/bioc/html/Pbase.html) package.
+
+
+???
+
+Comments of **spectral counting**:
+- easy, but *semi-quantitative*
+- **Note depth/coverage and compare to RNA-seq.**
+
+---
+class: middle center
+
+### Labelled MS2: Isobaric tagging
+
+![](./Figures/itraq.png)
+
+???
+
+Comments of **isobaric tagging**:
+- multiplexing, albeit limited
+- limited problem with missing values
+- easy to process (fewer parameters to set)
+
+---
+class: middle center
+
+### Label-free MS1: extracted ion chromatograms
+
+![](./Figures/chrom_peaks.png)
+
+Credit: [Johannes Rainer](https://github.com/jotsetung/)
+
+???
+
+Comments on **label-free**:
+
+- Data processing
+- Independent runs, NAs
+
+---
+class: middle center
+
+### Labelled MS1: SILAC
+
+![](./Figures/Silac.gif)
+
+Credit: Wikimedia Commons.
+
+???
+
+Comments of **isotope labelling**:
+- like red/green microarrays
+- can be extended to 3, but risk of overlap of light, medium and heavy
+  peaks
+
+---
+class: middle, center
+
+## 4. The *[MSnbase](https://bioconductor.org/packages/3.9/MSnbase)* package 
+&lt;img src="https://raw.githubusercontent.com/Bioconductor/BiocStickers/master/MSnbase/MSnbase.png" alt="MSnbase" style="width: 150px; padding: 10px"/&gt;
+
+---
+class: middle 
+
+### Practical/demo
+
+- handling raw MS data using MSnExp objects
+- peptide fragmentation
+- loading identification data
+- from raw to quantitative data as MSnSet objects
+- load spreadsheet to MSnSet
+- Quantitative proteomics data processing
+  - filtering (independent filtering)
+  - missing values
+  - log transformation
+  - normalisation
+  - summarisation
+
+
+
+---
+class: middle
+name: laurent-gatto
+
+.left-col-50[
+&lt;img src="./img/lgatto3b.png" width = "180px"/&gt;
+### Laurent Gatto
+&lt;i class="fas fa-flask"&gt;&lt;/i&gt;&amp;nbsp;[Computational Biology Group](https://lgatto.github.io/cbio-lab/)&lt;br /&gt;
+&lt;i class="fas fa-map-marker-alt"&gt;&lt;/i&gt;&amp;nbsp;de Duve Institute, UCLouvain&lt;br /&gt;
+&lt;i class="fas fa-envelope"&gt;&lt;/i&gt;&amp;nbsp;laurent.gatto@uclouvain.be&lt;br /&gt;
+&lt;i class="fas fa-home"&gt;&lt;/i&gt;&amp;nbsp;https://lgatto.github.io&lt;br /&gt;
+&lt;i class="fab fa-twitter"&gt;&lt;/i&gt;&amp;nbsp;[@lgatto](https://twitter.com/lgatt0/)&lt;br /&gt;
+&lt;i class="fab fa-github"&gt;&lt;/i&gt;&amp;nbsp;[lgatto](https://github.com/lgatto/)&lt;br /&gt;
+&lt;img width="20px" align="top" alt="orcid" src="./img/orcid_64x64.png" /&gt;&amp;nbsp;[0000-0002-1520-2268](https://orcid.org/0000-0002-1520-2268)&lt;br /&gt;
+&lt;img width="20px" align="top" alt="Impact story" src="./img/keybase.png"/&gt;&amp;nbsp;[lgatto](https://keybase.io/lgatto)&lt;br /&gt;
+&lt;img width="20px" align="top" alt="Google scholar" src="./img/gscholar.png"/&gt;&amp;nbsp;[Google scholar](https://scholar.google.co.uk/citations?user=k5DrB74AAAAJ&amp;hl=en)&lt;br /&gt;
+&lt;img width="20px" align="top" alt="Impact story" src="./img/impactstory-logo.png"/&gt;&amp;nbsp;[Impact story](https://profiles.impactstory.org/u/0000-0002-1520-2268)&lt;br /&gt;
+&lt;i class="fas fa-pencil-alt"&gt;&lt;/i&gt;&amp;nbsp;[dissem.in](https://dissem.in/r/6231/laurent-gatto)&lt;br /&gt;
+&lt;!-- &lt;i class="fab fa-linkedin"&gt;&lt;/i&gt;&amp;nbsp;https://www.linkedin.com/in/lgatto/&lt;br /&gt; --&gt;
+]
+
+.rigth-col-50[
+
+**Acknowledgements**: ...
+
+## Thank you for your attention
+
+### Find the slides [online](https://raw.githack.com/lgatto/slide-templates/master/my_template.html).
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
