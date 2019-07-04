@@ -10,3 +10,10 @@ bss-lab.html: bss-lab.Rmd
 
 lab.html: lab.Rmd
 	Rscript -e 'rmarkdown::render("lab.Rmd")'
+
+
+www:
+	cp bss-slides.html docs/.
+	cp bss-lab.html docs/.
+	cp lab.html docs/.
+	Rscript -e 'knitr::knit("README.md", output = "./docs/index.html")'
