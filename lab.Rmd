@@ -262,19 +262,21 @@ Most community-driven formats described in the table are supported in
 `R`. We will see how to read and access these data in the following
 sections.
 
+
 ```{r datatab, results='asis', echo=FALSE}
 datatab <-
     data.frame(Type = c("raw", "identification", "quantitation",
-                   "peak lists", "quant and id"),
+                   "peak lists", "quant and id", "protein db"),
                Format = c("mzML, mzXML, netCDF, mzData",
-                   "mzIdentML", "mzQuantML", "mgf", "mzTab"),
+                   "mzIdentML", "mzQuantML", "mgf", "mzTab", "fasta"),
                Package = c(
                    "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read and write in version >= 2.3.13) via *[mzR](http://bioconductor.org/packages/mzR)*",
                    paste("*[mzID](http://bioconductor.org/packages/mzID)* (read) and",
                          "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read, via *[mzR](http://bioconductor.org/packages/mzR)*)"),
                    "",
                    "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read)",
-                   "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read)"))
+                   "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read)",
+                   "*[Biostrings](http://bioconductor.org/packages/Biostrings)*"))
 
 knitr::kable(datatab)
 ```

@@ -7,3 +7,6 @@ bss-slides.html: bss-slides.Rmd
 
 bss-lab.html: bss-lab.Rmd
 	Rscript -e 'rmarkdown::render("bss-lab.Rmd")'
+
+lab.html: lab.Rmd
+	Rscript -e 'rmarkdown::render("lab.Rmd")'

@@ -10,11 +10,240 @@ output:
 # Introduction
 
 This tutorial requires `r BiocStyle::Biocpkg("MSnbase")` and 
-`r BiocStyle::Biocexptpkg("msdata")` package. A longer version of the material is available 
+`r BiocStyle::Biocexptpkg("msdata")` package. 
+
+```{r env, message = FALSE}
+library("MSnbase")
+library("msdata")
+```
+
+A longer version of the material is available
 [here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html).
 
 
 # Data files in mass spectrometry
+
+Most community-driven formats described in the table are supported in
+`R`. We will see how to read and access these data in the following
+sections.
+
+```{r datatab, results='asis', echo=FALSE}
+datatab <-
+    data.frame(Type = c("raw", "identification", "quantitation",
+                   "peak lists", "quant and id", "protein db"),
+               Format = c("mzML, mzXML, netCDF, mzData",
+                   "mzIdentML", "mzQuantML", "mgf", "mzTab", "fasta"),
+               Package = c(
+                   "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read and write in version >= 2.3.13) via *[mzR](http://bioconductor.org/packages/mzR)*",
+                   paste("*[mzID](http://bioconductor.org/packages/mzID)* (read) and",
+                         "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read, via *[mzR](http://bioconductor.org/packages/mzR)*)"),
+                   "",
+                   "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read)",
+                   "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read)",
+                   "*[Biostrings](http://bioconductor.org/packages/Biostrings)*"))
+
+knitr::kable(datatab)
+```
+
+# Loading raw data
+
+Raw data files (in any of the above formats) is read into R using
+`MSnbase::readMSData` function that will return an list-like object of
+class `MSnExp`.
+
+```{r data1}
+basename(fl3 <- msdata::proteomics(full.name = TRUE, pattern = "MS3TMT11"))
+(rw3 <- readMSData(fl3, mode = "onDisk"))
+```
+
+An `MSnExp` object contains 
+
+- the raw data (spectra), accessible with `[`
+- features data, accessible as a dataframe with `fData`
+
+We can also access specific data using
+
+- `msLevel(rw3)`
+- `rtime(rw3)`
+- `precursorMz(rw3)`
+- `centroided(rw3)`
+- ...
+
+```{r ex1}
+table(msLevel(rw3), centroided(rw3))
+```
+
+# Loading identification data
+
+```{r id}
+basename(idf <- msdata::ident(full.name = TRUE))
+iddf <- readMzIdData(idf)
+```
+
+```{r fdrplot}
+library("ggplot2")
+ggplot(iddf, aes(x = MS.GF.RawScore, colour = isDecoy)) +
+    geom_density()
+```
+
+# Combining raw and identification data
+
+```{r addid}
+basename(quantFile <- dir(system.file(package = "MSnbase", dir = "extdata"),
+                 full.name = TRUE, pattern = "mzXML$"))
+basename(identFile <- dir(system.file(package = "MSnbase", dir = "extdata"),
+                          full.name = TRUE, pattern = "dummyiTRAQ.mzid"))
+     
+msexp <- readMSData(quantFile)
+fvarLabels(msexp)
+msexp <- addIdentificationData(msexp, identFile)
+fvarLabels(msexp)
+```
+
+# Quantitative data
+
+Quantiative data is stored a objects of class `MSnSet`, which can be 
+
+```{r msnset, fig.cap = "The MSnSet structure", echo = FALSE}
+knitr::include_graphics("./Figures/msnset.png")
+```
+
+1. Created from an `MSnExp` object with the `quantify` function.
+2. Created from a spreadsheet produced by a third party software using
+   the `readMSnSet2` function.
+
+Before reading the spreadsheet, we need to identify which columns
+contain quantitation data (that will be put into the `exprs` slot)
+and the feature data (that will be put into the `fData` slot).
+
+```{r read}
+f <- "./data/cptac_peptides.txt"
+getEcols(f, split = "\t")
+e <- grepEcols(f, "Intensity ", split = "\t") ## careful at the space!
+(cptac <- readMSnSet2(f, ecol = e,
+                      fnames = "Sequence",
+                      sep = "\t"))
+```
+
+We can access the expression data with `exprs` and the feature
+meta-data with `fData`.
+
+For the sake of simplicity, we can clean up the feature variables and
+only keep those of interest. It is possible to do this interactively
+with
+
+```{r selectfeats0, eval = FALSE}
+cptac <- selectFeatureData(cptac)
+```
+
+or by setting the feature variables of interest.
+
+```{r selectfeats}
+cptac <- selectFeatureData(cptac,
+                           fcol = c("Proteins",
+                                    "Potential.contaminant",
+                                    "Reverse",
+                                    "Sequence"))
+```
+
+Let's also add sample annotations:
+
+```{r pdata}
+cptac$group <- rep(c("6A", "6B"), each = 3)
+cptac$sample <- rep(7:9, 2)
+sampleNames(cptac) <- sub("Intensity.", "", sampleNames(cptac))
+pData(cptac)
+```
+
+# Data processing
+
+## Filtering out contaminants 
+
+```{r conts}
+table(sel_conts <- fData(cptac)$Potential.contaminant != "+")
+```
+
+```{r rev}
+table(sel_rev <- fData(cptac)$Reverse != "+")
+```
+
+```{r filtering}
+(cptac <- cptac[sel_conts & sel_rev, ])
+```
+
+Note how the filtering has been recorded in the object's processing
+log.
+
+## Notes on missing values
+
+Unfortunately, some software uses 0 irrespecitve whether the data has
+intensity zero and when the data haven't been observer. Below we fix
+this.
+
+
+```{r setna}
+exprs(cptac)[exprs(cptac) == 0] <- NA
+table(is.na(exprs(cptac)))
+```
+
+From here on, one could filter data with missing values, which however
+sacrifices a lot of data.
+
+```{r filterNA}
+(cptac <- filterNA(cptac))
+```
+
+Perform imputation, considering the underlying nature of missingness,
+i.e missing not at random (left-censored) or at random.
+
+![Root-mean-square error (RMSE) observations standard deviation ratio (RSR), KNN and MinDet imputation. Lower (blue) is better.](./Figures/imp-sim.png)
+
+See Lazar *et al.* [Accounting for the Multiple Natures of Missing
+Values in Label-Free Quantitative Proteomics Data Sets to Compare
+Imputation
+Strategies](http://dx.doi.org/10.1021/acs.jproteome.5b00981).
+
+The best solution is arguably to handle missing values at the
+statistical test level (see later).
+
+## Log transformation
+
+```{r log}
+(cptac <- log(cptac, base = 2))
+```
+
+## Normalisation
+
+Normalisation is handled by the `normalise` (or `normalize`) function.
+
+```{r norm}
+(cptac <- normalise(cptac, method = "quantiles"))
+```
+
+## Summarisation
+
+So far we have quantitation values at the peptide level, while the
+level of interest are proteins. We can take all peptides that are
+associated to a protein (or protein group), as defined by the
+`Proteins` feature variable and aggregate them using a preferred
+operation.
+
+```{r featsfig, fig.cap = "Aggregation between different levels.", echo = FALSE}
+knitr::include_graphics("https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/featuresplot-1.png")
+```
+
+
+```{r featsfig2, fig.cap = "Examples of aggregations.", echo = FALSE}
+knitr::include_graphics("https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/plotstat-1.png")
+```
+
+
+```{r combine}
+(cptac <- combineFeatures(cptac, fcol = "Proteins", method = "mean"))
+```
+
+As you will see in the next section, there are much better aggregation
+function than the mean!
 
 # Session info {.unnumbered}
 
