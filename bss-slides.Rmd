@@ -431,7 +431,7 @@ class: middle
   - normalisation
   - summarisation
 
-
+See the [lab](https://htmlpreview.github.io/?https://github.com/lgatto/bioc-ms-prot/blob/master/bss-lab.html) vignette.
 
 ---
 class: middle
