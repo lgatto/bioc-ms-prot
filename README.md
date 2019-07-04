@@ -1,6 +1,6 @@
 # Mass spectrometry and proteomics using R/Bioconductor
 
-## Table of content
+### Table of content
 
 - Brief intro on how MS works
 - Raw MS data (linked to the how MS works section)
@@ -9,7 +9,7 @@
 - Proteomics data processing overview
 - Some packages of interest
 
-## Courses
+### Courses
 
 Material used as part of the [CSAMA
 2018](http://www.huber.embl.de/csama2018/), [Exploring, visualising
@@ -23,13 +23,13 @@ R](https://training.csx.cam.ac.uk/bioinformatics/event/2759559) (Jan
 - Read the full [lab](https://lgatto.github.io/bioc-ms-prot/lab.html) online.
 
 
-## Citation
+### Citation
 
 Gatto, Laurent. (2019, January). Bioconductor tools for mass
 spectrometry and
 proteomics. Zenodo. http://doi.org/10.5281/zenodo.2547971
 
-## License
+### License
 
 This material, unless otherwise stated, has been adapted from our is
 made available under the
