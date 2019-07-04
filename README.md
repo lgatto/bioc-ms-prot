@@ -1,4 +1,4 @@
-# Mass spectrometry and proteomics using R/Bioconductor
+# Workflows and Practicals for Mass spectrometry and proteomics using R/Bioconductor
 
 ### Table of content
 
