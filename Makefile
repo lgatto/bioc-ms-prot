@@ -14,6 +14,7 @@ lab.html: lab.Rmd
 
 www:
 	cp bss-slides.html docs/.
+	cp -r bss-slides_files docs/.
 	cp bss-lab.html docs/.
 	cp lab.html docs/.
 	Rscript -e 'rmarkdown::render("README.md", output_file = "./docs/index.html")'
