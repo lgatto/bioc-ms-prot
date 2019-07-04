@@ -16,4 +16,4 @@ www:
 	cp bss-slides.html docs/.
 	cp bss-lab.html docs/.
 	cp lab.html docs/.
-	Rscript -e 'knitr::knit("README.md", output = "./docs/index.html")'
+	Rscript -e 'rmarkdown::render("README.md", output_file = "./docs/index.html")'
