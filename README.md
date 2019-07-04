@@ -16,7 +16,7 @@ R](https://training.csx.cam.ac.uk/bioinformatics/event/2759559) (Jan
 2019) courses.
 
 - The introduction slides are available [here](http://bit.ly/20180712csama) (from CSAMA 2018)
-- [Slides] from the [Bioinformatics Summer School 2019 (UCLouvain)](https://uclouvain-cbio.github.io/BSS2019/).
+- [Slides]() and [lab]() from the [Bioinformatics Summer School 2019 (UCLouvain)](https://uclouvain-cbio.github.io/BSS2019/).
 - Read the [lab online](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html)
 
 

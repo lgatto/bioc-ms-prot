@@ -1,2 +1,9 @@
+bss:
+	make bss-slides.html
+	make bss-lab.html
+
 bss-slides.html: bss-slides.Rmd
 	Rscript -e 'rmarkdown::render("bss-slides.Rmd")'
+
+bss-lab.html: bss-lab.Rmd
+	Rscript -e 'rmarkdown::render("bss-lab.Rmd")'

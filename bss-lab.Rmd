@@ -1,0 +1,23 @@
+---
+title: "Mass spectrometry and proteomics"
+author:
+- name: Laurent Gatto
+  affiliation: de Duve Institute, UCLouvain
+output:
+  BiocStyle::html_document
+---
+
+# Introduction
+
+This tutorial requires `r BiocStyle::Biocpkg("MSnbase")` and 
+`r BiocStyle::Biocexptpkg("msdata")` package. A longer version of the material is available 
+[here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html).
+
+
+# Data files in mass spectrometry
+
+# Session info {.unnumbered}
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
