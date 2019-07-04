@@ -10,14 +10,15 @@
 - Some packages of interest
 
 Material used as part of the [CSAMA
-2018](http://www.huber.embl.de/csama2018/) and [Exploring, visualising
+2018](http://www.huber.embl.de/csama2018/), [Exploring, visualising
 and analysing proteomics data in
 R](https://training.csx.cam.ac.uk/bioinformatics/event/2759559) (Jan
-2019) courses.
+2019) courses and the [Bioinformatics Summer School 2019
+(BSS2019)](https://uclouvain-cbio.github.io/BSS2019/).
 
-- The introduction slides are available [here](http://bit.ly/20180712csama) (from CSAMA 2018)
-- [Slides]() and [lab]() from the [Bioinformatics Summer School 2019 (UCLouvain)](https://uclouvain-cbio.github.io/BSS2019/).
-- Read the [lab online](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html)
+- Intro slides are available [here](http://bit.ly/20180712csama) (from CSAMA 2018).
+- [Slides](https://htmlpreview.github.io/?https://github.com/lgatto/bioc-ms-prot/blob/master/bss-slides.html) and [lab](https://htmlpreview.github.io/?https://github.com/lgatto/bioc-ms-prot/blob/master/bss-lab.html) from the [Bioinformatics Summer School 2019 (UCLouvain)](https://uclouvain-cbio.github.io/BSS2019/).
+- Read the full [lab](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html) online.
 
 
 ## Citation
