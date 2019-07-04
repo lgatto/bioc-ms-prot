@@ -374,7 +374,15 @@ class: middle center
 
 ### Label-free MS1: extracted ion chromatograms
 
+.left-col-50[
+![MS1 spectra over retention time.](./Figures/F02-3D-MS1-scans-400-1200-lattice.png)
+]
+
+.right-col-50[
 ![](./Figures/chrom_peaks.png)
+]
+
+
 
 Credit: [Johannes Rainer](https://github.com/jotsetung/)
 
