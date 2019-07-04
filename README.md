@@ -9,6 +9,8 @@
 - Proteomics data processing overview
 - Some packages of interest
 
+## Courses
+
 Material used as part of the [CSAMA
 2018](http://www.huber.embl.de/csama2018/), [Exploring, visualising
 and analysing proteomics data in
