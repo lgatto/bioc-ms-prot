@@ -189,6 +189,21 @@ exprs(cptac)[exprs(cptac) == 0] <- NA
 table(is.na(exprs(cptac)))
 ```
 
+```{r napac, fig.cap = "Overview of missing data"}
+napac <- cptac
+exprs(napac)[!is.na(exprs(napac))] <- 1
+naplot(napac)
+```
+
+```{r nna}
+fData(cptac)$nNA <- apply(exprs(cptac), 1, function(x) sum(is.na(x)))
+table(fData(cptac)$nNA)
+```
+
+(Note that some peptides aren't seen at all because these 6 samples
+are a subset of a larger dataset, and these features are present in
+the other acquisitions.)
+
 From here on, one could **filter** data with missing values, which however
 sacrifices a lot of data.
 
