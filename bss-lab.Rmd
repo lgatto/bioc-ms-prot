@@ -58,7 +58,7 @@ basename(fl3 <- msdata::proteomics(full.name = TRUE, pattern = "MS3TMT11"))
 
 An `MSnExp` object contains 
 
-- the raw data (spectra), accessible with `[`
+- the raw data (spectra), accessible with `[` and `[[`
 - features data, accessible as a dataframe with `fData`
 
 We can also access specific data using
@@ -109,6 +109,20 @@ knitr::include_graphics("./Figures/msnset.png")
 ```
 
 1. Created from an `MSnExp` object with the `quantify` function.
+
+```{r quant}
+data(itraqdata)
+itraqdata
+msnset <- quantify(itraqdata, method = "trap", reporters = iTRAQ4)
+msnset
+```
+
+```{r qvis, fig.cap = "Raw data and quantiative results"}
+plot(itraqdata[[1]], reporters = iTRAQ4, full = TRUE)
+exprs(msnset)[1, ]
+fData(msnset)[1, ]
+```
+
 2. Created from a spreadsheet produced by a third party software using
    the `readMSnSet2` function.
 
