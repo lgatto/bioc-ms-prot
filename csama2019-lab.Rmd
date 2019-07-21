@@ -10,8 +10,10 @@ output:
 ---
 
 # TODO
+
 - smallestUniqueGroup
 - proteinGroupsFile with peptides with PTMs
+- compare median vs robust
 
 # Introduction
 
@@ -458,6 +460,53 @@ plotMDS(exprs(cptac_rob), col = as.numeric(as.factor(cptac$condition)))
 
 # Data Analysis
 
+## Estimation
+
+MSqRob is currently working with a format where we have one dataframe
+for each protein.  This will be changed in the next release.
+Therefore we first have to reorganise the data.
+
+Next the models are fitted. This is done using the `fit.model`
+function.  We only have to model the data using the factor condition
+from the pheno data of the protein level MSnSet.  The name of the
+factor variable is specified in the fixed argument (if multiple
+predictors have to be incorporated in the model, a vector of variable
+names has to be provided in this argument). The argument shrinkage is
+used to specify if ridge regression has to be adopted.  For the sake
+of speed we do not do this in the tutorial. The shrinkage has to be
+specified for each variable in the fixed effects. We also have to
+indicate this for the intercept (which we never shrink).  So we
+specify it at `c(0, 0)` to indicate that the intercept (first 0) and
+the parameters for the factor condition (second 0) are not penalized.
+We set the `robust_var` function equal to `FALSE`, this functionality
+will be removed from the package in the next release.
+
+
+```{r models, cache = TRUE}
+protMSqRob <- MSnSet2protdata(cptac_rob, "Proteins")
+models <- fit.model(protdata = protMSqRob,
+                    response = "quant_value",
+                    fixed = "condition",
+                    shrinkage.fixed = c(0, 0),
+                    robust_var = FALSE)
+```
+
+## Inference
+
+Many biologists have problems with the reference coding.  In MSqRob we
+have opted to formulate contrasts using all levels of a factor.
+Internally, the contrasts are than recasted according to the factor
+level that is the reference class.
+
+```{r}
+L <- makeContrast("conditionB - conditionA",
+                  levels = c("conditionA", "conditionB"))
+tests <- test.contrast_adjust(models, L)
+nSig <- sum(tests$signif, na.rm = TRUE)
+head(tests)
+```
+
+There are`r nSig` proteins with a significant effect at the 5% FDR level. 
 
 
 # Session info {.unnumbered}
