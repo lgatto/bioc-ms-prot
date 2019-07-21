@@ -9,18 +9,25 @@ output:
   BiocStyle::html_document
 ---
 
+# TODO
+- smallestUniqueGroup
+- proteinGroupsFile with peptides with PTMs
+
 # Introduction
 
 This tutorial requires  the
 `r BiocStyle::Biocpkg("MSnbase")`, 
-`r BiocStyle::Githubpkg("statOmics/MSqRob")` and 
+`r BiocStyle::Githubpkg("statOmics/MSqRob")` 
+`r BiocStyle::Biocpkg("limma")` and
 `r BiocStyle::Biocexptpkg("msdata")` packages, as well as some of the
 `r BiocStyle::CRANpkg("tidyverese")` packages 
 for data tidying and visualisation.
 
 ```{r env, message = FALSE}
 library("MSnbase")
+library("MSqRob")
 library("msdata")
+library("limma")
 ```
 
 A longer version of the material is available
@@ -273,7 +280,7 @@ cptac <- selectFeatureData(cptac,
 Let's also add sample annotations:
 
 ```{r pdata}
-cptac$group <- rep(c("6A", "6B"), each = 3)
+cptac$condition <- rep(c("A", "B"), each = 3)
 cptac$sample <- rep(7:9, 2)
 sampleNames(cptac) <- sub("Intensity.", "", sampleNames(cptac))
 pData(cptac)
@@ -366,6 +373,13 @@ Strategies](http://dx.doi.org/10.1021/acs.jproteome.5b00981).
 The best solution is arguably to handle missing values at **the
 statistical test level**, which is the approach we are going to use.
 
+We are going to keep peptides that had a least two observations. This
+can be done with the `nNA` variable that we compute above
+
+```{r nNAfilt}
+cptac <- cptac[fData(cptac)$nNA <= 4, ]
+```
+
 ## Log transformation
 
 ```{r log}
@@ -377,8 +391,26 @@ statistical test level**, which is the approach we are going to use.
 Normalisation is handled by the `normalise` (or `normalize`) function.
 
 ```{r norm}
+plotDensities(exprs(cptac))
 (cptac <- normalise(cptac, method = "quantiles"))
+plotDensities(exprs(cptac))
 ```
+
+We can visualize our data using a Multi Dimensional Scaling (MDS)
+plot, using the `plotMDS` function from the `limma` package. We use
+the condition sample variable to colour-code the samples.
+
+
+```{r mds}
+plotMDS(exprs(cptac), col = as.numeric(as.factor(cptac$condition)))
+```
+
+The first axis in the plot is showing the leading log fold changes
+(differences on the log scale) between the samples.  We notice that
+the leading differences (log FC) in the peptide data seems to be
+driven by technical variability.  Indeed the samples do not seem to be
+clearly separated according to the spike in condition.  
+
 
 ## Summarisation
 
@@ -399,11 +431,19 @@ knitr::include_graphics("https://rformassspectrometry.github.io/Features/article
 
 
 ```{r combine}
-(cptac <- combineFeatures(cptac, fcol = "Proteins", method = "mean"))
+(cptac_prot <- combineFeatures(cptac, fcol = "Proteins", method = "mean", na.rm = TRUE))
 ```
+
+Because there are missing values for the peptide level data we use the
+`na.rm=TRUE` argument to summarize the data based on the observed
+peptides for every protein.
 
 **As you will see in the next section, there are much better aggregation
 function than the mean!**
+
+# Data Analysis
+
+
 
 # Session info {.unnumbered}
 
