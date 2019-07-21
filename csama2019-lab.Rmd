@@ -429,17 +429,32 @@ knitr::include_graphics("https://rformassspectrometry.github.io/Features/article
 knitr::include_graphics("https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/plotstat-1.png")
 ```
 
-
-```{r combine}
-(cptac_prot <- combineFeatures(cptac, fcol = "Proteins", method = "mean", na.rm = TRUE))
+```{r combine_med}
+(cptac_median <- combineFeatures(cptac, fcol = "Proteins", method = "median", na.rm = TRUE))
 ```
 
 Because there are missing values for the peptide level data we use the
 `na.rm=TRUE` argument to summarize the data based on the observed
 peptides for every protein.
 
-**As you will see in the next section, there are much better aggregation
-function than the mean!**
+
+```{r mds}
+plotMDS(exprs(cptac_median), col = as.numeric(as.factor(cptac$condition)))
+```
+
+**Exercise**: Repeat the summarisation using a more robust
+normalisation by setting `method = "robjust"`, as described in [Sticker *et
+al*. (2019)](https://www.biorxiv.org/content/10.1101/668863v1) and
+visualise the data on an MDS plot. Which one do you anticipate to
+provide better results?
+
+<details>
+```{r combine_rob}
+cptac_rob <- combineFeatures(cptac, fcol = "Proteins", method = "robust", na.rm = TRUE)
+plotMDS(exprs(cptac_rob), col = as.numeric(as.factor(cptac$condition)))
+```
+</details>
+
 
 # Data Analysis
 
