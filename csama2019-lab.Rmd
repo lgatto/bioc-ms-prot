@@ -2,7 +2,9 @@
 title: "CSAMA2019: Mass spectrometry and proteomics lab"
 author:
 - name: Laurent Gatto
-  affiliation: de Duve Institute, UCLouvain
+  affiliation: Computational Biology group, de Duve Institute, UCLouvain, Belgium
+- name: Lieven Clemen
+  affiliation: statOmics group, Gent University, Belgium
 output:
   BiocStyle::html_document
 ---
@@ -77,6 +79,13 @@ We can also access specific data using
 
 See `?MSnExp` for details.
 
+
+**Exercise**: Using `msLevel`, extract the MS level of the
+`length(rw3)` spectra of the `rw3` file. What levels are available in
+these data. Using `centroided`, check what spectra and centroided of
+in profile mode. Which are the levels that are centroided or in
+profile mode.
+
 <details>
 
 ```{r ex1}
@@ -86,18 +95,46 @@ table(msLevel(rw3), centroided(rw3))
 
 # Loading identification data
 
+Idenfification data in `mzId` is parsed and loaded as a `data.frame`
+using the `readMzIdData` function.
+
+
 ```{r id}
 basename(idf <- msdata::ident(full.name = TRUE))
 iddf <- readMzIdData(idf)
 ```
+
+Among the identification variables available, you will find
+`MS.GF.RawScore`, the identification score computated by MSGF+ (the
+search engine used for the search), and `isDecoy`. 
+
+```{idvars}
+names(iddf)
+```
+
+**Exercise**: Reproduce and interpret the plot showing the
+identification score distribution for the decoy and real peptides in
+this file.
+
+
+<details>
 
 ```{r fdrplot}
 library("ggplot2")
 ggplot(iddf, aes(x = MS.GF.RawScore, colour = isDecoy)) +
     geom_density()
 ```
+</details>
+
 
 # Combining raw and identification data
+
+When working with raw and identification data, these two can be merged
+by adding the identification results to the raw feature meta-data
+slot. Below, we use small data that is shipped with the `MSnbase`
+package. The raw data being very small, we can afford to read it into
+memory without specifying `mode = "onDisk"`.
+
 
 ```{r addid}
 basename(quantFile <- dir(system.file(package = "MSnbase", dir = "extdata"),
@@ -107,9 +144,25 @@ basename(identFile <- dir(system.file(package = "MSnbase", dir = "extdata"),
      
 msexp <- readMSData(quantFile)
 fvarLabels(msexp)
+```
+
+Add this stage, there's only one `spectrum` feature variable with the
+spectra indices. Below we add the identification data with
+`addIdentificationData` to gain 33 new feature variables.
+
+
+```{r addid2}
 msexp <- addIdentificationData(msexp, identFile)
 fvarLabels(msexp)
 ```
+
+Note that prior to addition, the identification data is filtered as
+documented in the `filterIdentificationDataFrame` function:
+
+1. only PSMs matching the regular (non-decoy) database are retained;
+2. PSMs of rank greater than 1 are discarded; 
+3. only proteotypic peptides are kept.
+
 
 # Quantitative data
 
@@ -137,17 +190,49 @@ fData(msnset)[1, ]
 2. Created from a spreadsheet produced by a third party software using
    the `readMSnSet2` function.
 
+We are going to use the `cptac_a_b_peptides.txt` file from the
+`msdata` package. These data are the 6th study of the Clinical
+Proteomic Technology Assessment for Cancer (CPTAC). In this
+experiment, the authors spiked the Sigma Universal Protein Standard
+mixture 1 (UPS1) containing 48 different human proteins in a protein
+background of 60 ng/μL Saccharomyces cerevisiae strain BY4741 (MATa,
+leu2Δ0, met15Δ0, ura3Δ0, his3Δ1). Two different spike-in
+concentrations were used: 6A (0.25 fmol UPS1 proteins/μL) and 6B (0.74
+fmol UPS1 proteins/μL). We limited ourselves to the data of
+LTQ-Orbitrap W at site 56. The data were searched with MaxQuant
+version 1.5.2.8, and detailed search settings were described in
+Goeminne *et al.* (2016). Three replicates are available for each
+concentration.
+
+The study is a spike-in study for which we know the ground truth so we
+have the ability to evaluate the quality of the fold change estimates
+and the list of DE genes that we return with a method.
+
+
+```{r cptacfile}
+basename(f <- msdata::quant(full.names = TRUE))
+```
+
 Before reading the spreadsheet, we need to identify which columns
 contain quantitation data (that will be put into the `exprs` slot)
 and the feature data (that will be put into the `fData` slot).
 
-**Download** the data
-[here](https://raw.githubusercontent.com/lgatto/bioc-ms-prot/master/data/cptac_peptides.txt).
+Below `getEcols` lists the column names in the expression data
+spreadsheet. The quantitative values we want to used are those in the
+columns starting with `Intensity 6A_7`, `Intensity 6A_8`, ... 
+`Intensity 6B_9`, that we refer to with `Intensity `. 
+
+
+```{r read0}
+getEcols(f, split = "\t")
+```
+
+Using the pattern, we can set the coulumns to be used to populate the
+quantitation slot.
+
 
 ```{r read}
-f <- "./data/cptac_peptides.txt"
-getEcols(f, split = "\t")
-e <- grepEcols(f, "Intensity ", split = "\t") ## careful at the space!
+(e <- grepEcols(f, "Intensity ", split = "\t")) ## careful at the space!
 (cptac <- readMSnSet2(f, ecol = e,
                       fnames = "Sequence",
                       sep = "\t"))
@@ -183,7 +268,7 @@ sampleNames(cptac) <- sub("Intensity.", "", sampleNames(cptac))
 pData(cptac)
 ```
 
-# Data processing
+# Quantitative data processing
 
 ## Filtering out contaminants 
 
