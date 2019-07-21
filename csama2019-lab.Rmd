@@ -11,8 +11,12 @@ output:
 
 # Introduction
 
-This tutorial requires `r BiocStyle::Biocpkg("MSnbase")` and 
-`r BiocStyle::Biocexptpkg("msdata")` package. 
+This tutorial requires  the
+`r BiocStyle::Biocpkg("MSnbase")`, 
+`r BiocStyle::Githubpkg("statOmics/MSqRob")` and 
+`r BiocStyle::Biocexptpkg("msdata")` packages, as well as some of the
+`r BiocStyle::CRANpkg("tidyverese")` packages 
+for data tidying and visualisation.
 
 ```{r env, message = FALSE}
 library("MSnbase")
@@ -238,8 +242,15 @@ quantitation slot.
                       sep = "\t"))
 ```
 
+
 We can access the expression data with `exprs` and the feature
 meta-data with `fData`.
+
+```{r exprs_and_fData}
+head(exprs(cptac))
+tail(exprs(cptac))
+fvarLabels(cptac)
+```
 
 For the sake of simplicity, we can clean up the feature variables and
 only keep those of interest. It is possible to do this interactively
@@ -268,9 +279,29 @@ sampleNames(cptac) <- sub("Intensity.", "", sampleNames(cptac))
 pData(cptac)
 ```
 
+This could also be done by reading a spreadsheet into R as a
+`data.frame`, making sure that the rownames match the sample names
+exactly, and then adding it with `pData(cptac) <- myDf`.
+
+
+The sample names are rather long and contain information on the
+spike-in concentration and the repeat. We this remove `Intensity.6`
+from the sample names:
+
+```{r snms}
+sampleNames(cptac) <- sub("Intensity\\.6", "", sampleNames(cptac))
+sampleNames(cptac) 
+```
+
 # Quantitative data processing
 
 ## Filtering out contaminants 
+
+Below, we create vector of logicals (and count) recording peptides
+that are assigned to contaminant and recerse proteins. These are
+annotated with a `"+"` in the respective `"Potential.contaminant"` and
+`"Reverse"` feature variables.
+
 
 ```{r conts}
 table(sel_conts <- fData(cptac)$Potential.contaminant != "+")
@@ -287,11 +318,12 @@ table(sel_rev <- fData(cptac)$Reverse != "+")
 Note how the filtering has been recorded in the object's processing
 log.
 
+
 ## Notes on missing values
 
 Unfortunately, some software uses 0 irrespecitve whether the data has
 intensity zero and when the data haven't been observer. Below we fix
-this.
+this by setting all 0 values to `NA`.
 
 
 ```{r setna}
@@ -314,11 +346,11 @@ table(fData(cptac)$nNA)
 are a subset of a larger dataset, and these features are present in
 the other acquisitions.)
 
-From here on, one could **filter** data with missing values, which however
-sacrifices a lot of data.
+From here on, one could **filter** data with missing values, which
+however sacrifices a lot of data.
 
 ```{r filterNA}
-(cptac <- filterNA(cptac))
+filterNA(cptac)
 ```
 
 Perform **imputation**, considering the underlying nature of missingness,
@@ -332,7 +364,7 @@ Imputation
 Strategies](http://dx.doi.org/10.1021/acs.jproteome.5b00981).
 
 The best solution is arguably to handle missing values at **the
-statistical test level** (see later).
+statistical test level**, which is the approach we are going to use.
 
 ## Log transformation
 
