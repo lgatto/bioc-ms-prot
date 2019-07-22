@@ -442,9 +442,10 @@ class: middle
 ### Summarisation
 
 
-```{r featsfig, fig.cap = "Aggregation between different levels.", echo = FALSE}
+```{r featsfig, echo = FALSE}
 knitr::include_graphics("https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/featuresplot-1.png")
 ```
+Aggregation between different levels.
 
 ---
 class: middle 
@@ -452,10 +453,10 @@ class: middle
 ### Summarisation
 
 
-```{r featsfig2, fig.cap = "Examples of aggregations.", echo = FALSE}
+```{r featsfig2, echo = FALSE}
 knitr::include_graphics("https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/plotstat-1.png")
 ```
-
+Examples of aggregations (from the [Features](https://rformassspectrometry.github.io/Features/articles/Features.html#subsetting) package).
 
 ---
 class: middle 
