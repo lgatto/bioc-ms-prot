@@ -75,3 +75,8 @@ a, a > code {
   width: 60%;
   float: right;
 }
+
+.left-col-100 {
+  width: 100%;
+  float: left;
+}

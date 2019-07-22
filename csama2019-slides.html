@@ -486,6 +486,7 @@ What can one do?
 
 - filter out features (or at least those that have *too many* missing values).
 - imputation (`MSnbase::impute` - see above and next slide)
+- Feature rescuing (identification transfer, matching between runs)
 - when possible, use a statistical method that accounts for missing
   values (for example
   [proDA](https://www.biorxiv.org/content/10.1101/661496v1),
@@ -508,10 +509,54 @@ Strategies](http://dx.doi.org/10.1021/acs.jproteome.5b00981).
 ---
 class: middle 
 
+### Feature rescuing
+
+
+.left-col-50[
+![Retention time alignment](./Figures/pr-2012-00776t_0004.jpeg)
+]
+
+.right-col-50[
+![Matching between runs](./Figures/idtrans.png)
+]
+
+
+.left-col-100[
+From Bond *et al.* [Improving Qualitative and Quantitative Performance
+for MSE-based Label-free
+Proteomics](https://pubs.acs.org/doi/10.1021/pr300776t).
+]
+
+---
+class: middle 
+
+### Missing values
+
+Can appear because
+
+- the feature is missing (due to biology, i.e not at random) - for example `impute(, method = "min")`
+- the feature was missed during the acquisition process (i.e at
+  random) - for example `impute(, method = "MLE")`
+- mixture thereof - for example `impute(, method = "mixed")` (used in *[DEP](https://bioconductor.org/packages/3.9/DEP)*)
+  
+What can one do?
+
+- filter out features (or at least those that have *too many* missing values).
+- imputation (`MSnbase::impute` - see above and next slide)
+- Feature rescuing (identification transfer, matching between runs)
+- when possible, use a statistical method that accounts for missing
+  values (for example
+  [proDA](https://www.biorxiv.org/content/10.1101/661496v1),
+  [MSqRob](https://www.biorxiv.org/content/10.1101/668863v1), ...)
+
+
+---
+class: middle 
+
 ### Summarisation
 
 
-&lt;img src="./Figures/features.png" width="7720" /&gt;
+&lt;img src="./Figures/features.png" width="5045" /&gt;
 Examples of aggregations (from the [Features](https://rformassspectrometry.github.io/Features/articles/Features.html#subsetting) package).
 
 
@@ -530,8 +575,20 @@ al. (2019)](https://www.biorxiv.org/content/10.1101/668863v1.full).
 ---
 class: middle 
 
-### Differential analysis
+### Two stage differential analysis
 
+1. Aggregate normalised peptide intensities of a protein using robust
+   regression with M-estimation using Huber weights: 
+   
+   `\(y_{sp} = \color{blue}{\beta^{sample}_s} + \color{red}{\beta^{pep}_p + \epsilon_{sp}}\)`
+
+2. Protein-level inference: 
+
+   `\(y_{st} = \beta_0 + \color{blue}{\beta^{treatment}_t} + \epsilon_{ts}\)`
+
+Sticker *et al.* 2019, *Robust summarization and inference in
+proteome-wide label-free quantification*,
+[https://doi.org/10.1101/668863](https://doi.org/10.1101/668863).
 
 
 ---
