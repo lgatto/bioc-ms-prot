@@ -1,6 +1,7 @@
 csama2019:
 	make csama2019-lab.html
 	make csama2019-slides.html
+	make www
 
 csama2019-lab.html: csama2019-lab.Rmd
 	Rscript -e 'rmarkdown::render("csama2019-lab.Rmd")'
