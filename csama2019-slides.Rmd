@@ -63,14 +63,16 @@ These data tables are less similar than they appear.
 ---
 class: middle, center
 
-## 1. [Proteomics](http://bioconductor.org/packages/release/BiocViews.html#___Proteomics) and [mass spectrometry](http://bioconductor.org/packages/release/BiocViews.html#___MassSpectrometry) packages and [workflow](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html) in Bioconductor.
+## 1. [Proteomics](http://bioconductor.org/packages/release/BiocViews.html#___Proteomics) and [mass spectrometry](http://bioconductor.org/packages/release/BiocViews.html#___MassSpectrometry) packages, [questions](https://support.bioconductor.org/local/search/page/?q=proteomics) and [workflow](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html) in Bioconductor.
+
 
 ---
 class: middle, center
 
-## 2. How does mass spectrometry work? 
+## 2. How does mass spectrometry work?
 
 ### (applies to proteomics and metabolomics)
+
 
 ---
 class: middle
@@ -419,21 +421,52 @@ You will be use the`r BiocStyle::Biocpkg("MSnbase")` and `r BiocStyle::Githubpkg
 ---
 class: middle 
 
-### Practical/demo
 
-Quantitative proteomics data processing
-- missing values
+Quantitative proteomics data processing 
+
+- data processing/cleaning
+- **missing values**
 - log transformation and normalisation
-- summarisation
-- differential analysis 
-
-Summarisation and differential analysis based on work by Lieven
-Clement *et al.*
+- **summarisation**
+- **differential analysis**
 
 ---
 class: middle 
 
 ### Missing values
+
+Can appear because
+
+- the feature is missing (due to biology, i.e not at random)
+- the feature was missed during the acquisition process (i.e at
+  random)
+- mixture thereof
+  
+What can one do?
+
+- filter out features
+- imputation
+- when possible, use a statistical method that accounts for missing
+  values (for example
+  [proDA](https://www.biorxiv.org/content/10.1101/661496v1),
+  [MSqRob](https://www.biorxiv.org/content/10.1101/668863v1),
+  [limma](http://bioconductor.org/packages/release/bioc/html/limma.html),
+  ...)
+
+
+
+---
+class: middle 
+
+### Imputation
+
+![](./Figures/imp-sim.png)
+
+Root-mean-square error (RMSE) observations standard deviation ratio
+(RSR), KNN and MinDet imputation. Lower (blue) is better. See Lazar
+*et al.* [Accounting for the Multiple Natures of Missing Values in
+Label-Free Quantitative Proteomics Data Sets to Compare Imputation
+Strategies](http://dx.doi.org/10.1021/acs.jproteome.5b00981).
 
 
 ---
@@ -488,7 +521,12 @@ name: laurent-gatto
 
 .rigth-col-50[
 
-Slides available at: http://bit.ly/20190725csama
+**Acknowledgements** [Sebastian Gibb](https://github.com/sgibb) and
+[Johannes Rainer](https://github.com/jorainer) (software development)
+
+
+**Slides** available at http://bit.ly/20190725csama
+
 
 ## Thank you for your attention
 
