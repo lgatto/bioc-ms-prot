@@ -27,16 +27,12 @@ class: middle
 
 ## On the menu
 
-**Overall goal** (with [Lieven
-Clement](https://statomics.github.io/pages/about.html)): quanitative
-proteomics data analysis done right using Bioconductor tools and (some
-of) the best statistical methods.
+Quantitative proteomics data analysis using Bioconductor tools
 
 1. Proteomics in Bioconductor
 2. How does mass spectrometry-based proteomics work?
 3. Quantitative proteomics
-4. Introduction to `r BiocStyle::Biocpkg("MSnbase")`
-
+4. Quantitative proteomics data processing and analysis
 
 ---
 class: middle center
@@ -414,7 +410,10 @@ Comments of **isotope labelling**:
 ---
 class: middle, center
 
-## 4. The `r BiocStyle::Biocpkg("MSnbase")` package 
+## 4. Quantitative proteomics data processing and analysis
+
+You will be use the`r BiocStyle::Biocpkg("MSnbase")` and `r BiocStyle::Githubpkg("statOmics/MSqRob")` packages during the lab.
+
 <img src="https://raw.githubusercontent.com/Bioconductor/BiocStickers/master/MSnbase/MSnbase.png" alt="MSnbase" style="width: 150px; padding: 10px"/>
 
 ---
@@ -422,19 +421,14 @@ class: middle
 
 ### Practical/demo
 
-- Files in mass spectrometry and proteomics
-- handling raw MS data using MSnExp objects
-- loading identification data
-- from raw to quantitative data as MSnSet objects
-- load spreadsheet to MSnSet
-- Quantitative proteomics data processing
-  - filtering (independent filtering)
-  - missing values
-  - log transformation
-  - normalisation
-  - summarisation
+Quantitative proteomics data processing
+- missing values
+- log transformation and normalisation
+- summarisation
+- differential analysis 
 
-See the [lab](https://htmlpreview.github.io/?https://github.com/lgatto/bioc-ms-prot/blob/master/bss-lab.html) vignette.
+Summarisation and differential analysis based on work by Lieven
+Clement *et al.*.
 
 ---
 class: middle

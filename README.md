@@ -25,6 +25,17 @@ Material used as part of the various courses:
 - Intro slides are available [here](http://bit.ly/20180712csama) (from CSAMA 2018).
 - Read the full [lab](https://lgatto.github.io/bioc-ms-prot/lab.html) online.
 
+### Questions and comments
+
+Thank you for your interest
+
+- If you have any general questions about using Bioconductor software
+  for mass spectrometry and proteomics data analysis, please use the
+  [Bioconductor support form](https://support.bioconductor.org/).
+  
+- For questions about this repo of some material here, please open an
+  [issue](https://github.com/lgatto/bioc-ms-prot/issues).
+
 
 ### Citation
 
