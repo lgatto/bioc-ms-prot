@@ -19,8 +19,15 @@ R](https://training.csx.cam.ac.uk/bioinformatics/event/2759559) (Jan
 (BSS2019)](https://uclouvain-cbio.github.io/BSS2019/).
 
 
-- Lecture [slides](http://bit.ly/20180712csama) and lab for the CSAMA 2019 course.
-- [Slides](https://lgatto.github.io/bioc-ms-prot/bss-slides.html) and [lab](https://lgatto.github.io/bioc-ms-prot/bss-lab.html) from the [Bioinformatics Summer School 2019 (UCLouvain)](https://uclouvain-cbio.github.io/BSS2019/).
+- Lecture
+  [slides](https://lgatto.github.io/bioc-ms-prot/csama2019-slides.html#1)
+  (http://bit.ly/20190725csama) and
+  [lab](https://lgatto.github.io/bioc-ms-prot/csama2019-lab.html#1)
+  for the CSAMA 2019 course.
+- [Slides](https://lgatto.github.io/bioc-ms-prot/bss-slides.html) and
+  [lab](https://lgatto.github.io/bioc-ms-prot/bss-lab.html) from the
+  [Bioinformatics Summer School 2019
+  (UCLouvain)](https://uclouvain-cbio.github.io/BSS2019/).
 - Intro slides are available [here](http://bit.ly/20180712csama) (from CSAMA 2018).
 - Read the full [lab](https://lgatto.github.io/bioc-ms-prot/lab.html) online.
 
