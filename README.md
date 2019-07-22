@@ -11,13 +11,7 @@
 
 ### Courses
 
-Material used as part of the [CSAMA
-2018](http://www.huber.embl.de/csama2018/), [Exploring, visualising
-and analysing proteomics data in
-R](https://training.csx.cam.ac.uk/bioinformatics/event/2759559) (Jan
-2019) courses and the [Bioinformatics Summer School 2019
-(BSS2019)](https://uclouvain-cbio.github.io/BSS2019/).
-
+Material used as part of the various courses:
 
 - Lecture
   [slides](https://lgatto.github.io/bioc-ms-prot/csama2019-slides.html#1)
