@@ -443,26 +443,53 @@ Quantitative proteomics data processing
 ---
 class: middle 
 
+&lt;img src="./Figures/msnset.png" width="587" /&gt;
+
+The MSnSet structure: expression (accessed with `exprs`), feature
+(`fData`) and sample (`pData`) metadata.
+
+
+---
+class: middle 
+
 ### Missing values
 
 Can appear because
 
-- the feature is missing (due to biology, i.e not at random)
+- the feature is missing (due to biology, i.e not at random) 
 - the feature was missed during the acquisition process (i.e at
-  random)
-- mixture thereof
-  
+  random) 
+- mixture thereof 
+
 What can one do?
 
-- filter out features
+- filter out features (or at least those that have *too many* missing values).
 - imputation
 - when possible, use a statistical method that accounts for missing
   values (for example
   [proDA](https://www.biorxiv.org/content/10.1101/661496v1),
-  [MSqRob](https://www.biorxiv.org/content/10.1101/668863v1),
-  [limma](http://bioconductor.org/packages/release/bioc/html/limma.html),
-  ...)
+  [MSqRob](https://www.biorxiv.org/content/10.1101/668863v1), ...)
 
+---
+class: middle 
+
+### Missing values
+
+Can appear because
+
+- the feature is missing (due to biology, i.e not at random) - for example `impute(, method = "min")`
+- the feature was missed during the acquisition process (i.e at
+  random) - for example `impute(, method = "MLE")`
+- mixture thereof - for example `impute(, method = "mixed")` (used in *[DEP](https://bioconductor.org/packages/3.9/DEP)*)
+  
+What can one do?
+
+- filter out features (or at least those that have *too many* missing values).
+- imputation (`MSnbase::impute` - see above and next slide)
+- when possible, use a statistical method that accounts for missing
+  values (for example
+  [proDA](https://www.biorxiv.org/content/10.1101/661496v1),
+  [MSqRob](https://www.biorxiv.org/content/10.1101/668863v1), ...)
 
 
 ---
@@ -478,24 +505,27 @@ Root-mean-square error (RMSE) observations standard deviation ratio
 Label-Free Quantitative Proteomics Data Sets to Compare Imputation
 Strategies](http://dx.doi.org/10.1021/acs.jproteome.5b00981).
 
-
 ---
 class: middle 
 
 ### Summarisation
 
 
-![](https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/featuresplot-1.png)&lt;!-- --&gt;
-Aggregation between different levels.
-
----
-class: middle 
-
-### Summarisation
-
-
-![](https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/plotstat-1.png)&lt;!-- --&gt;
+&lt;img src="./Figures/features.png" width="7720" /&gt;
 Examples of aggregations (from the [Features](https://rformassspectrometry.github.io/Features/articles/Features.html#subsetting) package).
+
+
+---
+class: middle 
+
+
+![](./Figures/summarisation.jpg)&lt;!-- --&gt;
+
+Summarisation examples: (1) peptide-level data, (2) mean intensity of
+the *top three* peptides (Proteus), (3) using pair-wise abundance
+ratios of shared peptides between samples (MaxQuant) and (4) robust
+summarisation (MSqRob). From [Sticker et
+al. (2019)](https://www.biorxiv.org/content/10.1101/668863v1.full).
 
 ---
 class: middle 

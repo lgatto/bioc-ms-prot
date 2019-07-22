@@ -179,11 +179,16 @@ documented in the `filterIdentificationDataFrame` function:
 
 # Quantitative data
 
-Quantiative data is stored a objects of class `MSnSet`, which can be 
+Quantitative data is stored a objects of class `MSnSet`, that are
+composed of an expression matrix (accessed with `exprs()`), a feature
+meta-data dataframe (accessed with `fData()`) and a meta-data
+dataframe (accessed with `pData()`).
 
 ```{r msnset, fig.cap = "The MSnSet structure", echo = FALSE}
 knitr::include_graphics("./Figures/msnset.png")
 ```
+
+`MSnSet` objects can be:
 
 1. Created from an `MSnExp` object with the `quantify` function.
 
