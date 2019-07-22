@@ -2,7 +2,7 @@
 title: "Mass spectrometry and proteomics"
 subtitle: "Using R/Bioconductor"
 author: "[Laurent Gatto](#laurent-gatto)"
-date: "[CSAMA](https://www.huber.embl.de/csama2019/) - Bressanone - 5 July 2019"
+date: "[CSAMA](https://www.huber.embl.de/csama2019/) - Bressanone - 25 July 2019"
 output:
   xaringan::moon_reader:
     css: ["default", "default-fonts", "my.css"]
@@ -428,7 +428,41 @@ Quantitative proteomics data processing
 - differential analysis 
 
 Summarisation and differential analysis based on work by Lieven
-Clement *et al.*.
+Clement *et al.*
+
+---
+class: middle 
+
+### Missing values
+
+
+---
+class: middle 
+
+### Summarisation
+
+
+```{r featsfig, fig.cap = "Aggregation between different levels.", echo = FALSE}
+knitr::include_graphics("https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/featuresplot-1.png")
+```
+
+---
+class: middle 
+
+### Summarisation
+
+
+```{r featsfig2, fig.cap = "Examples of aggregations.", echo = FALSE}
+knitr::include_graphics("https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/plotstat-1.png")
+```
+
+
+---
+class: middle 
+
+### Differential analysis
+
+
 
 ---
 class: middle
