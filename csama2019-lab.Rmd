@@ -403,7 +403,7 @@ plot, using the `plotMDS` function from the `limma` package. We use
 the condition sample variable to colour-code the samples.
 
 
-```{r mds}
+```{r mds0}
 plotMDS(exprs(cptac), col = as.numeric(as.factor(cptac$condition)))
 ```
 
@@ -440,7 +440,7 @@ Because there are missing values for the peptide level data we use the
 peptides for every protein.
 
 
-```{r mds}
+```{r mds1}
 plotMDS(exprs(cptac_median), col = as.numeric(as.factor(cptac$condition)))
 ```
 
