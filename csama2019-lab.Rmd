@@ -13,19 +13,29 @@ output:
 # Introduction
 
 This tutorial requires  the
-`r BiocStyle::Biocpkg("MSnbase")`, 
-`r BiocStyle::Githubpkg("statOmics/MSqRob")` 
-`r BiocStyle::Biocpkg("limma")` and
+`r BiocStyle::Biocpkg("MSnbase")` ([Gatto and Lilley
+(2011)](https://academic.oup.com/bioinformatics/article/28/2/288/199094)),
+`r BiocStyle::Githubpkg("statOmics/MSqRob")` ([Goeminne *et al.*
+(2016)](https://www.ncbi.nlm.nih.gov/pubmed/26566788)),
+`r BiocStyle::Biocpkg("limma")` ([Ritchie *et al.*
+ (2015)](https://academic.oup.com/nar/article/43/7/e47/2414268)) and
 `r BiocStyle::Biocexptpkg("msdata")` packages, as well as some of the
-`r BiocStyle::CRANpkg("tidyverese")` packages 
-for data tidying and visualisation.
+`r BiocStyle::CRANpkg("tidyverse")`
+packages for data tidying and visualisation.
 
 ```{r env, message = FALSE}
 library("MSnbase")
 library("MSqRob")
 library("msdata")
 library("limma")
+library("tidyverse")
 ```
+
+Sections 2 to 4 deal with raw mass spectrometry and identification
+data stemming from the open community-developed data formats (see
+below). Section 5 describes how to produce or import quantitative data
+and the sections thereafter focus on the processing and analysis of
+differentially expressed proteins.
 
 ### Data files in mass spectrometry  {.unnumbered}
 
@@ -54,9 +64,12 @@ knitr::kable(datatab)
 # Raw MS data
 
 Raw data files (in any of the above formats) is read into R using
-`MSnbase::readMSData` function that will return an list-like object of
-class `MSnExp`. Below, we first extract the full path to the
-`MS3TMT11.mzML` file from the `msdata` package before reading it in.
+`readMSData` function from the `MSnbase` package, that will return an
+list-like object of class `MSnExp`. Below, we first extract the full
+path to the `MS3TMT11.mzML` file from the `msdata` package^[The
+`proteomics`, `ident` and `quant` `msdata` functions return example
+files for raw, identification and quantitative data respectively.]
+before reading it in.
 
 
 ```{r data1}
@@ -142,7 +155,6 @@ this file.
 <details>
 
 ```{r fdrplot}
-library("ggplot2")
 ggplot(iddf, aes(x = MS.GF.RawScore, colour = isDecoy)) +
     geom_density()
 ```
@@ -203,7 +215,7 @@ knitr::include_graphics("./Figures/msnset.png")
 2. Created from a spreadsheet produced by a third party software using
    the `readMSnSet2` function.
 
-## Using the `quantify` method
+## Quantifying raw data
 
 ```{r quant}
 data(itraqdata)
@@ -222,7 +234,7 @@ exprs(msnset)[1, ]
 fData(msnset)[1, ]
 ```
 
-## Using the `readMSnSet2` function
+## Importing third-party data
 
 We are going to use the `cptac_a_b_peptides.txt` tab-separated file
 from the `msdata` package. These data are the 6th study of the
@@ -303,7 +315,7 @@ fvarLabels(cptac)
 Let's also add sample annotations:
 
 ```{r pdata}
-cptac$condition <- rep(c("A", "B"), each = 3)
+cptac$condition <- factor(rep(c("A", "B"), each = 3))
 cptac$sample <- rep(7:9, 2)
 pData(cptac)
 ```
@@ -322,6 +334,9 @@ sampleNames(cptac) <- sub("Intensity\\.6", "", sampleNames(cptac))
 sampleNames(cptac) 
 ```
 
+Note that data in the `mzTab` format can be imported using the
+`readMzTabData` function.
+
 # Quantitative data processing
 
 ## Handling overlapping protein groups
@@ -338,7 +353,7 @@ length(unique(fData(cptac)$Proteins))
 As shown above, we will keep `r length(keep)` protein groups
 from the `r length(unique(fData(cptac)$Proteins))` 
 protein groups recorded in the data. This vector of protein names is
-used to filter the full data.
+used to filter the peptide-level data.
 
 ```{r smugr1}
 (cptac <- cptac[fData(cptac)$Proteins %in% keep, ])
@@ -347,9 +362,10 @@ used to filter the full data.
 ## Filtering out contaminants and reverse hits
 
 Below, we create vector of logicals (and count) recording peptides
-that are assigned to contaminant and recerse proteins. These are
-annotated with a `"+"` in the respective `"Potential.contaminant"` and
-`"Reverse"` feature variables.
+that are assigned to contaminant (such as keratine, trypsine, ...) and
+reverse proteins (from the decoy database). These are annotated with a
+`"+"` in the respective `"Potential.contaminant"` and `"Reverse"`
+feature variables.
 
 
 ```{r conts}
@@ -491,7 +507,7 @@ samples.
 
 
 ```{r mds0}
-plotMDS(exprs(cptac), col = as.numeric(as.factor(cptac$condition)))
+plotMDS(exprs(cptac), col = as.numeric(cptac$condition))
 ```
 
 The first axis in the plot is showing the leading log fold changes
@@ -502,10 +518,10 @@ separated according to the spike in condition.
 
 ## Summarisation
 
-So far we have quantitation values at the peptide level, while the
-level of interest are proteins. We can take all peptides that are
-associated to a protein group, as defined by the `Proteins` feature
-variable and aggregate them using a preferred operation.
+So far we have used quantitation values at the peptide level, while
+the data of interest are proteins. We can take all peptides that are
+associated with a protein group, as defined by the `Proteins` feature
+variable, and aggregate them using an summary function of choice.
 
 
 ```{r featsfig2, fig.cap = "Examples of aggregation from PSMs, peptides to proteins using median aggregation.", echo = FALSE}
@@ -520,14 +536,16 @@ Below, we combine the peptides into proteins using the median, passing
                                method = "median", na.rm = TRUE))
 ```
 
-We obtain `r nrow(cptac_prot)` proteins. Note how the processing steps are recorded.
+We obtain `r nrow(cptac_prot)` proteins. Note how the processing steps are recorded. Below, we
+visualise the protein-level data on an MDS plot.
+
 
 ```{r mds1}
-plotMDS(exprs(cptac_prot), col = as.numeric(as.factor(cptac_prot$condition)))
+plotMDS(exprs(cptac_prot), col = as.numeric(cptac_prot$condition))
 ```
 
-**Exercise**: Repeat the summarisation using a more robust
-normalisation by setting `method = "robust"`, as described in [Sticker *et
+**Exercise**: Repeat the summarisation using a the robust
+normalisation by setting`method = "robust"`, as described in [Sticker *et
 al*. (2019)](https://www.biorxiv.org/content/10.1101/668863v1) and
 visualise the data on an MDS plot. Which one do you anticipate to
 provide better results?
@@ -536,7 +554,7 @@ provide better results?
 ```{r combine_rob, warning = FALSE}
 cptac_rob <- combineFeatures(cptac, fcol = "Proteins",
                              method = "robust", na.rm = TRUE)
-plotMDS(exprs(cptac_rob), col = as.numeric(as.factor(cptac_rob$condition)))
+plotMDS(exprs(cptac_rob), col = as.numeric(cptac_rob$condition))
 ```
 </details>
 
@@ -555,6 +573,10 @@ dataframe for each protein.  This will be changed in the next release
 to use the `MSnSet` directly. Therefore we first have to reorganise
 the data.
 
+```{r dfprot, cache = TRUE}
+protMSqRob <- MSnSet2protdata(cptac_prot, "Proteins")
+```
+
 Next the models are fitted. This is done using the `fit.model`
 function.  We only have to model the data using the factor condition
 from the sample metadata (the `pData` slot) of the protein level
@@ -568,12 +590,11 @@ effects. We also have to indicate this for the intercept (which we
 never shrink).  So we specify it at `c(0, 0)` to indicate that the
 intercept (first 0) and the parameters for the factor condition
 (second 0) are not penalized.  We set the `robust_var` function equal
-to `FALSE`, this functionality will be removed from the package in the
-next release.
+to `FALSE` - this functionality will be removed from the package in
+the next release.
 
 
 ```{r models, cache = TRUE}
-protMSqRob <- MSnSet2protdata(cptac_prot, "Proteins")
 models <- fit.model(protdata = protMSqRob,
                     response = "quant_value",
                     fixed = "condition",
@@ -617,7 +638,6 @@ effect at the 5% FDR level.
 ## Volcano plot
 
 ```{r volc}
-library("ggplot2")
 volc <- ggplot(fData(cptac_prot)$res,
                aes(x = estimate,
                    y = -log10(pval),
@@ -658,8 +678,6 @@ convert that wide format dataframe to a long format and visualise the
 expression distributions in each group.
 
 ```{r de_peps_ggplot, warning = FALSE}
-library("magrittr")
-
 ms2df(cptac_sign) %>%
     tidyr::gather(key = sample, value = expression, 1:6) %>%
     ggplot(aes(x = sample, y = expression)) +
@@ -731,9 +749,11 @@ fData(cptac_prot)$res %>%
 
 # Further reading
 
-A version with additional material of this lab is available
-[here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html).
+- A version with additional material of this lab is available
+  [here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html).
 
+- For additional `MSqRob` material, please see
+  [here](https://statomics.github.io/pda/)
 
 # Session information {.unnumbered}
 
