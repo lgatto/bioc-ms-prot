@@ -3,18 +3,12 @@ title: "CSAMA2019: Mass spectrometry and proteomics lab"
 author:
 - name: Laurent Gatto
   affiliation: Computational Biology group, de Duve Institute, UCLouvain, Belgium
-- name: Lieven Clemen
+- name: Lieven Clement
   affiliation: statOmics group, Gent University, Belgium
 date: "`r date()`"
 output:
   BiocStyle::html_document
 ---
-
-# TODO
-
-- smallestUniqueGroup
-- proteinGroupsFile with peptides with PTMs
-- compare median vs robust
 
 # Introduction
 
@@ -330,6 +324,26 @@ sampleNames(cptac)
 
 # Quantitative data processing
 
+## Handling overlapping protein groups
+
+In our approach a peptide can map to multiple proteins, as long as
+there is none of these proteins present in a smaller subgroup.
+
+```{r smugr0}
+head(keep <- smallestUniqueGroups(fData(cptac)$Proteins))
+length(keep)
+length(unique(fData(cptac)$Proteins))
+```
+
+As shown above, we will keep `r length(keep)` protein groups
+from the `r length(unique(fData(cptac)$Proteins))` 
+protein groups recorded in the data. This vector of protein names is
+used to filter the full data.
+
+```{r smugr1}
+(cptac <- cptac[fData(cptac)$Proteins %in% keep, ])
+```
+
 ## Filtering out contaminants and reverse hits
 
 Below, we create vector of logicals (and count) recording peptides
@@ -353,6 +367,35 @@ table(sel_rev <- fData(cptac)$Reverse != "+")
 Note how the filtering has been recorded in the object's processing
 log.
 
+## Removing PTM-only proteins
+
+Proteins for which all peptides are carrying modifications (PTMs) can
+be considered as unreliable. We will filter out these proteins. This
+information is included in the `Only.identified.by.site` column of the
+`proteinGroups.txt` MaxQuant file. The code chunk below provides this
+list of proteins.
+
+```{r ptm_only}
+ptm_only <- c("REV__CON__Q3T052", "REV__sp|P01120|RAS2_YEAST",
+              "REV__sp|P32849|RAD5_YEAST",
+              "REV__sp|Q03723|OST6_YEAST", "sp|P04051|RPC1_YEAST",
+              "sp|P06367|RS14A_YEAST",
+              "sp|P0CX73|YP11A_YEAST;sp|P0CX72|YL12A_YEAST;sp|P0CX71|YE11A_YEAST;sp|P0CX70|YD15A_YEAST;sp|Q6Q5H1|YP14A_YEAST;sp|P0C2I8|YL14A_YEAST",
+              "sp|P19657|PMA2_YEAST", "sp|P32465|HXT1_YEAST",
+              "sp|P39567|IMDH1_YEAST", "sp|P40527|ATC7_YEAST",
+              "sp|P40530|PDK1_YEAST", "sp|P40989|FKS2_YEAST",
+              "sp|P49955|SF3B1_YEAST", "sp|P51401|RL9B_YEAST",
+              "sp|P53072|TAN1_YEAST", "sp|Q03964|YD17A_YEAST",
+              "sp|Q04670|YM14B_YEAST;sp|Q12088|YL11B_YEAST;sp|Q03619|YE12B_YEAST",
+              "sp|Q08649|ESA1_YEAST", "sp|Q12112|YN11B_YEAST",
+              "sp|Q12479|IRC11_YEAST", "sp|Q3E7B7|YD85C_YEAST")
+```
+
+We now remove the peptides matched to these proteins:
+
+```{r ptm_only_remove}
+(cptac <- cptac[!fData(cptac)$Proteins %in% ptm_only, ])
+```
 
 ## Notes on missing values
 
@@ -422,7 +465,7 @@ We are going to keep peptides that had a least two observations. This
 can be done with the `nNA` variable that we compute above
 
 ```{r nNAfilt}
-cptac <- cptac[fData(cptac)$nNA <= 4, ]
+(cptac <- cptac[fData(cptac)$nNA <= 4, ])
 ```
 
 ## Log transformation
@@ -441,9 +484,10 @@ plotDensities(exprs(cptac))
 plotDensities(exprs(cptac))
 ```
 
-We can visualize our data using a Multi Dimensional Scaling (MDS)
-plot, using the `plotMDS` function from the `limma` package. We use
-the condition sample variable to colour-code the samples.
+We can visualise our peptide-level data using a Multi Dimensional
+Scaling (MDS) plot, using the `plotMDS` function from the `limma`
+package. We use the condition sample variable to colour-code the
+samples.
 
 
 ```{r mds0}
@@ -460,9 +504,8 @@ separated according to the spike in condition.
 
 So far we have quantitation values at the peptide level, while the
 level of interest are proteins. We can take all peptides that are
-associated to a protein (or protein group), as defined by the
-`Proteins` feature variable and aggregate them using a preferred
-operation.
+associated to a protein group, as defined by the `Proteins` feature
+variable and aggregate them using a preferred operation.
 
 
 ```{r featsfig2, fig.cap = "Examples of aggregation from PSMs, peptides to proteins using median aggregation.", echo = FALSE}
@@ -473,13 +516,14 @@ Below, we combine the peptides into proteins using the median, passing
 `na.rm = TRUE` to account for the missing values in the data. 
 
 ```{r combine_med}
-(cptac_median <- combineFeatures(cptac, fcol = "Proteins", method = "median", na.rm = TRUE))
+(cptac_prot <- combineFeatures(cptac, fcol = "Proteins",
+                               method = "median", na.rm = TRUE))
 ```
 
-We obtain `r nrow(cptac_median)` proteins. Note how the processing steps are recorded.
+We obtain `r nrow(cptac_prot)` proteins. Note how the processing steps are recorded.
 
 ```{r mds1}
-plotMDS(exprs(cptac_median), col = as.numeric(as.factor(cptac$condition)))
+plotMDS(exprs(cptac_prot), col = as.numeric(as.factor(cptac_prot$condition)))
 ```
 
 **Exercise**: Repeat the summarisation using a more robust
@@ -490,13 +534,19 @@ provide better results?
 
 <details>
 ```{r combine_rob, warning = FALSE}
-cptac_rob <- combineFeatures(cptac, fcol = "Proteins", method = "robust", na.rm = TRUE)
-plotMDS(exprs(cptac_rob), col = as.numeric(as.factor(cptac$condition)))
+cptac_rob <- combineFeatures(cptac, fcol = "Proteins",
+                             method = "robust", na.rm = TRUE)
+plotMDS(exprs(cptac_rob), col = as.numeric(as.factor(cptac_rob$condition)))
 ```
 </details>
 
 
-# Data Analysis
+# Differential expression analysis
+
+In this section, the median-summarised protein data will be used. As
+an exercice, you are advised to use the best of the median- or
+robust-summerised data and compare your results with those shown
+below.
 
 ## Estimation
 
@@ -523,7 +573,7 @@ next release.
 
 
 ```{r models, cache = TRUE}
-protMSqRob <- MSnSet2protdata(cptac_rob, "Proteins")
+protMSqRob <- MSnSet2protdata(cptac_prot, "Proteins")
 models <- fit.model(protdata = protMSqRob,
                     response = "quant_value",
                     fixed = "condition",
@@ -533,20 +583,70 @@ models <- fit.model(protdata = protMSqRob,
 
 ## Inference
 
-Many biologists have problems with the reference coding.  In MSqRob we
-have opted to formulate contrasts using all levels of a factor.
+Often, biologists have problems with the reference coding. In MSqRob
+we have opted to formulate contrasts using all levels of a factor.
 Internally, the contrasts are than recasted according to the factor
 level that is the reference class.
 
-```{r}
+```{r inference}
 L <- makeContrast("conditionB - conditionA",
                   levels = c("conditionA", "conditionB"))
-tests <- test.contrast_adjust(models, L)
-nSig <- sum(tests$signif, na.rm = TRUE)
-head(tests)
+res <- test.contrast_adjust(models, L)
+head(res)
 ```
 
-There are`r nSig` proteins with a significant effect at the 5% FDR level. 
+Below, we put the results of the statistical analysis back into the
+`MSnSet` feature data, to keep the data and their analysis
+together. We need however to rearrange the proteins in the result
+dataframe (ordered by adjusted p-value) to match the order in the
+`MSnSet`.
+
+
+```{r inf_in_msnset}
+fData(cptac_prot)$res <- res[featureNames(cptac_prot), ]
+
+```
+
+There are `r sum(fData(cptac_prot)$res$signif, na.rm = TRUE)` 
+protein groups identified as differentially expressed at a significant
+effect at the 5% FDR level.
+
+
+# Visualising DE results
+
+## Volcano plot
+
+```{r volc}
+library("ggplot2")
+volc <- ggplot(fData(cptac_prot)$res,
+               aes(x = estimate,
+                   y = -log10(pval),
+                   color = signif)) +
+    geom_point() +
+    scale_color_manual(values = c("black", "red"))
+volc
+```
+
+It is easy to generate an interactive graph to explore the results
+using the `plotly` package and passing the ggplot-object to the
+`ggplotly` function:
+
+```{r volcly, eval = FALSE}
+plotly::ggplotly(volc)
+```
+
+## Heatmap
+
+```{r hmap}
+sign <- which(fData(cptac_prot)$res$sig)
+heatmap(exprs(cptac_prot)[sign,])
+```
+
+## Expression data for proteins of interest
+
+
+
+
 
 # Further reading
 
