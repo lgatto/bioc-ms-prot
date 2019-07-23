@@ -27,7 +27,7 @@ library("msdata")
 library("limma")
 ```
 
-## Data files in mass spectrometry
+### Data files in mass spectrometry  {.unnumbered}
 
 Most community-driven formats described in the table are supported in
 `R`. We will see how to read and access these data in the following
@@ -735,7 +735,7 @@ A version with additional material of this lab is available
 [here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html).
 
 
-# Session info {.unnumbered}
+# Session information {.unnumbered}
 
 ```{r sessionInfo, echo=FALSE}
 sessionInfo()
