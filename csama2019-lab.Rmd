@@ -644,8 +644,89 @@ heatmap(exprs(cptac_prot)[sign,])
 
 ## Expression data for proteins of interest
 
+Below, we extract the peptide data matching the differentially
+expressed proteins.
 
+```{r de_peps}
+sign_prots <- featureNames(cptac_prot)[sign]
+(cptac_sign <- cptac[fData(cptac)$Proteins %in% sign_prots, ])
+```
 
+In the following code chunk, we convert the peptide-level `MSnSet`
+containing the significant peptides using the `ms2df` helper function,
+convert that wide format dataframe to a long format and visualise the
+expression distributions in each group.
+
+```{r de_peps_ggplot, warning = FALSE}
+library("magrittr")
+
+ms2df(cptac_sign) %>%
+    tidyr::gather(key = sample, value = expression, 1:6) %>%
+    ggplot(aes(x = sample, y = expression)) +
+    geom_boxplot() +
+    geom_jitter(aes(colour = Sequence)) +
+    facet_grid(Proteins ~ .)
+```
+
+## Global fold-changes
+
+Because we know the ground truth for the cptac study, i.e. we know
+that only the spike-in proteins (UPS) are differentially expressed, we
+can evalute the fold changes. Yeast proteins should be not
+differentially expressed and their log fold changes should be centered
+around 0. These of UPS proteins are spiked at differt concentrations
+and their log2 fold changes should be centered around $log2(concB/concA)$, i.e $log2(0.74/0.25) = 1.56$.
+
+```{r lfc}
+fData(cptac_prot)$res$spike <- grepl("UPS", fData(cptac_prot)$Proteins)
+
+ggplot(fData(cptac_prot)$res,
+       aes(x = spike, y = estimate)) +
+    geom_boxplot() +
+    ylab("log2 FC") + 
+    geom_hline(yintercept = c(0, log(0.74/0.25, base = 2)),
+               color = "red")
+```
+
+## Sensitivity FDP plot
+
+Because we know the ground truth for the cptac study, i.e. we know
+that only the spike-in proteins (UPS) are differentially expressed, we
+can calculate
+
+- the sensitivity or true positive rate (TPR), the proportion of
+  actual positives that are correctly identified, in the protein list
+  that we return
+
+  $$TPR=\frac{TP}{\text{#actual positives}},$$
+
+  here TP are the true positives in the list. The TPR is thus the
+  fraction of ups proteins that we can recall.
+
+- false discovery proportion (FPD): fraction of false positives in the
+  protein list that we return:
+
+  $$FPD=\frac{FP}{FP+TP},$$
+
+  with FP the false positives. In our case the yeast proteins that are
+  in our list.
+
+Instead of only calculating that for the protein list that is returned
+for the chosen FDR level, we can do this for all possible FDR cutoffs
+so that we get an overview of the quality of the ranking of the
+proteins in the protein list.
+
+```{r sens}
+
+fData(cptac_prot)$res %>%
+                    dplyr::arrange(qval) %>%
+                    dplyr::mutate(FDP = cumsum(!spike)/(1:length(spike)),
+                                  TPR = cumsum(spike)/sum(spike)) %>% 
+                    ggplot(aes(x = FDP, y = TPR)) +
+                    geom_path() +
+                    geom_point() + 
+                    geom_vline(xintercept = 0.05, lty = 2)
+```
 
 
 # Further reading
