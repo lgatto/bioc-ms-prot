@@ -27,7 +27,7 @@ library("msdata")
 library("limma")
 ```
 
-# Data files in mass spectrometry
+## Data files in mass spectrometry
 
 Most community-driven formats described in the table are supported in
 `R`. We will see how to read and access these data in the following
@@ -51,7 +51,7 @@ datatab <-
 knitr::kable(datatab)
 ```
 
-# Loading raw data
+# Raw MS data
 
 Raw data files (in any of the above formats) is read into R using
 `MSnbase::readMSData` function that will return an list-like object of
@@ -105,7 +105,7 @@ table(msLevel(rw3), centroided(rw3))
 ```
 </details>
 
-# Loading identification data
+# Identification results
 
 Identification data in `mzIdentML` is parsed and loaded as a
 `data.frame` using the `readMzIdData` function.
@@ -731,8 +731,7 @@ fData(cptac_prot)$res %>%
 
 # Further reading
 
-A longer version with additional links and material of this lab is
-available
+A version with additional material of this lab is available
 [here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html).
 
 
