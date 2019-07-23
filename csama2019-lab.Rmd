@@ -5,6 +5,7 @@ author:
   affiliation: Computational Biology group, de Duve Institute, UCLouvain, Belgium
 - name: Lieven Clemen
   affiliation: statOmics group, Gent University, Belgium
+date: "`r date()`"
 output:
   BiocStyle::html_document
 ---
@@ -31,10 +32,6 @@ library("MSqRob")
 library("msdata")
 library("limma")
 ```
-
-A longer version of the material is available
-[here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html).
-
 
 # Data files in mass spectrometry
 
@@ -64,7 +61,9 @@ knitr::kable(datatab)
 
 Raw data files (in any of the above formats) is read into R using
 `MSnbase::readMSData` function that will return an list-like object of
-class `MSnExp`.
+class `MSnExp`. Below, we first extract the full path to the
+`MS3TMT11.mzML` file from the `msdata` package before reading it in.
+
 
 ```{r data1}
 basename(fl3 <- msdata::proteomics(full.name = TRUE, pattern = "MS3TMT11"))
@@ -79,10 +78,16 @@ thereof.
 
 An `MSnExp` object contains 
 
-- the raw data (spectra), accessible with `[` and `[[`
+- the raw data (spectra), accessible with `[` and `[[`. The former
+  returns and subset of the data as a new `MSnExp` object, while the
+  former extracts a single spectrum.
 - features data, accessible as a dataframe with `fData`
 
-We can also access specific data using
+**Exercise**: Extract the first, second and tenth spectrum. What are
+their MS levels, precursor m/z and retention times?
+
+We can also access specific data for the whole experiment using
+accessors:
 
 - `msLevel(rw3)`
 - `rtime(rw3)`
@@ -108,8 +113,8 @@ table(msLevel(rw3), centroided(rw3))
 
 # Loading identification data
 
-Idenfification data in `mzId` is parsed and loaded as a `data.frame`
-using the `readMzIdData` function.
+Identification data in `mzIdentML` is parsed and loaded as a
+`data.frame` using the `readMzIdData` function.
 
 
 ```{r id}
@@ -125,10 +130,20 @@ search engine used for the search), and `isDecoy`.
 names(iddf)
 ```
 
+**Exercise**: How many PSMs from the read and decoy database are
+recoded in the identification data? Calculate summary statistics for
+MSGF+ raw scores.
+
+<details>
+```{r idex0}
+table(iddf$isDecoy)
+summary(iddf$MS.GF.RawScore)
+```
+</details>
+
 **Exercise**: Reproduce and interpret the plot showing the
 identification score distribution for the decoy and real peptides in
 this file.
-
 
 <details>
 
@@ -191,6 +206,10 @@ knitr::include_graphics("./Figures/msnset.png")
 `MSnSet` objects can be:
 
 1. Created from an `MSnExp` object with the `quantify` function.
+2. Created from a spreadsheet produced by a third party software using
+   the `readMSnSet2` function.
+
+## Using the `quantify` method
 
 ```{r quant}
 data(itraqdata)
@@ -199,32 +218,34 @@ msnset <- quantify(itraqdata, method = "trap", reporters = iTRAQ4)
 msnset
 ```
 
+Below, we plot the first MS2 spectrum from the `itraqdata` test data,
+highlighting the four iTRAQ reporter ions and extract the quantiation
+values and feature metadata of that same first record.
+
 ```{r qvis, fig.cap = "Raw data and quantiative results"}
 plot(itraqdata[[1]], reporters = iTRAQ4, full = TRUE)
 exprs(msnset)[1, ]
 fData(msnset)[1, ]
 ```
 
-2. Created from a spreadsheet produced by a third party software using
-   the `readMSnSet2` function.
+## Using the `readMSnSet2` function
 
-We are going to use the `cptac_a_b_peptides.txt` file from the
-`msdata` package. These data are the 6th study of the Clinical
-Proteomic Technology Assessment for Cancer (CPTAC). In this
+We are going to use the `cptac_a_b_peptides.txt` tab-separated file
+from the `msdata` package. These data are the 6th study of the
+Clinical Proteomic Technology Assessment for Cancer (CPTAC). In this
 experiment, the authors spiked the Sigma Universal Protein Standard
 mixture 1 (UPS1) containing 48 different human proteins in a protein
-background of 60 ng/μL Saccharomyces cerevisiae strain BY4741 (MATa,
-leu2Δ0, met15Δ0, ura3Δ0, his3Δ1). Two different spike-in
-concentrations were used: 6A (0.25 fmol UPS1 proteins/μL) and 6B (0.74
-fmol UPS1 proteins/μL). We limited ourselves to the data of
-LTQ-Orbitrap W at site 56. The data were searched with MaxQuant
-version 1.5.2.8, and detailed search settings were described in
-Goeminne *et al.* (2016). Three replicates are available for each
-concentration.
-
-The study is a spike-in study for which we know the ground truth so we
-have the ability to evaluate the quality of the fold change estimates
-and the list of DE genes that we return with a method.
+background of 60 ng/μL Saccharomyces cerevisiae strain BY4741 . Two
+different spike-in concentrations were used: 6A (0.25 fmol UPS1
+proteins/μL) and 6B (0.74 fmol UPS1 proteins/μL). We limited ourselves
+to the data of LTQ-Orbitrap W at site 56. The data were searched with
+MaxQuant version 1.5.2.8, and detailed search settings were described
+in [Goeminne *et al.*
+(2016)](https://www.ncbi.nlm.nih.gov/pubmed/26566788). Three
+replicates are available for each concentration. The study is a
+spike-in study for which we know the ground truth so we have the
+ability to evaluate the quality of the fold change estimates and the
+list of DE genes that we return with a method.
 
 
 ```{r cptacfile}
@@ -232,12 +253,12 @@ basename(f <- msdata::quant(full.names = TRUE))
 ```
 
 Before reading the spreadsheet, we need to identify which columns
-contain quantitation data (that will be put into the `exprs` slot)
-and the feature data (that will be put into the `fData` slot).
+contain quantitation data (that will be used to populate the `exprs`
+slot) and the feature data (that will be put into the `fData` slot).
 
-Below `getEcols` lists the column names in the expression data
+The `getEcols` function lists the column names in the expression data
 spreadsheet. The quantitative values we want to used are those in the
-columns starting with `Intensity 6A_7`, `Intensity 6A_8`, ... 
+columns starting with`Intensity 6A_7`, `Intensity 6A_8`, ... 
 `Intensity 6B_9`, that we refer to with `Intensity `. 
 
 
@@ -245,7 +266,7 @@ columns starting with `Intensity 6A_7`, `Intensity 6A_8`, ...
 getEcols(f, split = "\t")
 ```
 
-Using the pattern, we can set the coulumns to be used to populate the
+Using a pattern, we can set the columns to be used to populate the
 quantitation slot.
 
 
@@ -257,8 +278,8 @@ quantitation slot.
 ```
 
 
-We can access the expression data with `exprs` and the feature
-meta-data with `fData`.
+We can access the peptide-level expression data with `exprs` and the
+feature meta-data with `fData`.
 
 ```{r exprs_and_fData}
 head(exprs(cptac))
@@ -282,6 +303,7 @@ cptac <- selectFeatureData(cptac,
                                     "Potential.contaminant",
                                     "Reverse",
                                     "Sequence"))
+fvarLabels(cptac)
 ```
 
 Let's also add sample annotations:
@@ -289,7 +311,6 @@ Let's also add sample annotations:
 ```{r pdata}
 cptac$condition <- rep(c("A", "B"), each = 3)
 cptac$sample <- rep(7:9, 2)
-sampleNames(cptac) <- sub("Intensity.", "", sampleNames(cptac))
 pData(cptac)
 ```
 
@@ -309,7 +330,7 @@ sampleNames(cptac)
 
 # Quantitative data processing
 
-## Filtering out contaminants 
+## Filtering out contaminants and reverse hits
 
 Below, we create vector of logicals (and count) recording peptides
 that are assigned to contaminant and recerse proteins. These are
@@ -335,7 +356,7 @@ log.
 
 ## Notes on missing values
 
-Unfortunately, some software uses 0 irrespecitve whether the data has
+Unfortunately, some software use 0 irrespective whether the data has
 intensity zero and when the data haven't been observer. Below we fix
 this by setting all 0 values to `NA`.
 
@@ -345,30 +366,47 @@ exprs(cptac)[exprs(cptac) == 0] <- NA
 table(is.na(exprs(cptac)))
 ```
 
+The following figure shows the distribution of missing values for
+samples (columns) and rows (peptides). The cells have been reporder to
+emphasis the presence of missing values in the proteins shown at the
+top and the samples shown towards the right.
+
 ```{r napac, fig.cap = "Overview of missing data"}
 napac <- cptac
 exprs(napac)[!is.na(exprs(napac))] <- 1
 naplot(napac)
 ```
 
+The following figure the proportions of features (peptides in this
+case) with respect to their completeness (blue) and the percentage of
+missing data in the full dataset (red).
+
+```{r plotNA}
+plotNA(cptac)
+```
+
+Below, we count the number of missing values in each 
+
 ```{r nna}
 fData(cptac)$nNA <- apply(exprs(cptac), 1, function(x) sum(is.na(x)))
 table(fData(cptac)$nNA)
 ```
 
-(Note that some peptides aren't seen at all because these 6 samples
-are a subset of a larger dataset, and these features are present in
-the other acquisitions.)
+Note that some peptides aren't seen at all because these 6 samples are
+a subset of a larger dataset, and these features are present in the
+other acquisitions only.
 
-From here on, one could **filter** data with missing values, which
-however sacrifices a lot of data.
+From here on one could:
+
+- **filter** data with missing values, which however sacrifices a lot
+  of data.
 
 ```{r filterNA}
 filterNA(cptac)
 ```
 
-Perform **imputation**, considering the underlying nature of missingness,
-i.e missing not at random (left-censored) or at random.
+- perform **imputation**, considering the underlying nature of
+  missingness, i.e missing not at random (left-censored) or at random.
 
 ![Root-mean-square error (RMSE) observations standard deviation ratio (RSR), KNN and MinDet imputation. Lower (blue) is better.](./Figures/imp-sim.png)
 
@@ -377,8 +415,8 @@ Values in Label-Free Quantitative Proteomics Data Sets to Compare
 Imputation
 Strategies](http://dx.doi.org/10.1021/acs.jproteome.5b00981).
 
-The best solution is arguably to handle missing values at **the
-statistical test level**, which is the approach we are going to use.
+- The best solution is arguably to handle missing values at **the
+  statistical test level**, which is the approach we are going to use.
 
 We are going to keep peptides that had a least two observations. This
 can be done with the `nNA` variable that we compute above
@@ -414,10 +452,9 @@ plotMDS(exprs(cptac), col = as.numeric(as.factor(cptac$condition)))
 
 The first axis in the plot is showing the leading log fold changes
 (differences on the log scale) between the samples.  We notice that
-the leading differences (log FC) in the peptide data seems to be
-driven by technical variability.  Indeed the samples do not seem to be
-clearly separated according to the spike in condition.  
-
+the leading differences in the peptide data seems to be driven by
+technical variability. Indeed the samples do not seem to be clearly
+separated according to the spike in condition.
 
 ## Summarisation
 
@@ -427,36 +464,32 @@ associated to a protein (or protein group), as defined by the
 `Proteins` feature variable and aggregate them using a preferred
 operation.
 
-```{r featsfig, fig.cap = "Aggregation between different levels.", echo = FALSE}
-knitr::include_graphics("https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/featuresplot-1.png")
+
+```{r featsfig2, fig.cap = "Examples of aggregation from PSMs, peptides to proteins using median aggregation.", echo = FALSE}
+knitr::include_graphics("./Figures/features.png")
 ```
 
-
-```{r featsfig2, fig.cap = "Examples of aggregations.", echo = FALSE}
-knitr::include_graphics("https://rformassspectrometry.github.io/Features/articles/Features_files/figure-html/plotstat-1.png")
-```
+Below, we combine the peptides into proteins using the median, passing
+`na.rm = TRUE` to account for the missing values in the data. 
 
 ```{r combine_med}
 (cptac_median <- combineFeatures(cptac, fcol = "Proteins", method = "median", na.rm = TRUE))
 ```
 
-Because there are missing values for the peptide level data we use the
-`na.rm=TRUE` argument to summarize the data based on the observed
-peptides for every protein.
-
+We obtain `r nrow(cptac_median)` proteins. Note how the processing steps are recorded.
 
 ```{r mds1}
 plotMDS(exprs(cptac_median), col = as.numeric(as.factor(cptac$condition)))
 ```
 
 **Exercise**: Repeat the summarisation using a more robust
-normalisation by setting `method = "robjust"`, as described in [Sticker *et
+normalisation by setting `method = "robust"`, as described in [Sticker *et
 al*. (2019)](https://www.biorxiv.org/content/10.1101/668863v1) and
 visualise the data on an MDS plot. Which one do you anticipate to
 provide better results?
 
 <details>
-```{r combine_rob}
+```{r combine_rob, warning = FALSE}
 cptac_rob <- combineFeatures(cptac, fcol = "Proteins", method = "robust", na.rm = TRUE)
 plotMDS(exprs(cptac_rob), col = as.numeric(as.factor(cptac$condition)))
 ```
@@ -467,24 +500,26 @@ plotMDS(exprs(cptac_rob), col = as.numeric(as.factor(cptac$condition)))
 
 ## Estimation
 
-MSqRob is currently working with a format where we have one dataframe
-for each protein.  This will be changed in the next release.
-Therefore we first have to reorganise the data.
+`MSqRob` is currently working with a format where we have one
+dataframe for each protein.  This will be changed in the next release
+to use the `MSnSet` directly. Therefore we first have to reorganise
+the data.
 
 Next the models are fitted. This is done using the `fit.model`
 function.  We only have to model the data using the factor condition
-from the pheno data of the protein level MSnSet.  The name of the
-factor variable is specified in the fixed argument (if multiple
-predictors have to be incorporated in the model, a vector of variable
-names has to be provided in this argument). The argument shrinkage is
-used to specify if ridge regression has to be adopted.  For the sake
-of speed we do not do this in the tutorial. The shrinkage has to be
-specified for each variable in the fixed effects. We also have to
-indicate this for the intercept (which we never shrink).  So we
-specify it at `c(0, 0)` to indicate that the intercept (first 0) and
-the parameters for the factor condition (second 0) are not penalized.
-We set the `robust_var` function equal to `FALSE`, this functionality
-will be removed from the package in the next release.
+from the sample metadata (the `pData` slot) of the protein level
+`MSnSet`.  The name of the factor variable is specified in the fixed
+argument (if multiple predictors have to be incorporated in the model,
+a vector of variable names has to be provided in this argument). The
+argument shrinkage is used to specify if ridge regression has to be
+adopted.  For the sake of speed we do not do this in the tutorial. The
+shrinkage has to be specified for each variable in the fixed
+effects. We also have to indicate this for the intercept (which we
+never shrink).  So we specify it at `c(0, 0)` to indicate that the
+intercept (first 0) and the parameters for the factor condition
+(second 0) are not penalized.  We set the `robust_var` function equal
+to `FALSE`, this functionality will be removed from the package in the
+next release.
 
 
 ```{r models, cache = TRUE}
@@ -512,6 +547,12 @@ head(tests)
 ```
 
 There are`r nSig` proteins with a significant effect at the 5% FDR level. 
+
+# Further reading
+
+A longer version with additional links and material of this lab is
+available
+[here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html).
 
 
 # Session info {.unnumbered}
