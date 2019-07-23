@@ -543,10 +543,10 @@ plotMDS(exprs(cptac_rob), col = as.numeric(as.factor(cptac_rob$condition)))
 
 # Differential expression analysis
 
-In this section, the median-summarised protein data will be used. As
-an exercice, you are advised to use the best of the median- or
-robust-summerised data and compare your results with those shown
-below.
+**Exercise**: In this section, the median-summarised protein data will
+be used. As an exercice, you are advised to use the best of the
+median- or robust-summerised data and compare your results with those
+shown below.
 
 ## Estimation
 
