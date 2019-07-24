@@ -27,12 +27,18 @@ class: middle
 
 ## On the menu
 
-Quantitative proteomics data analysis using Bioconductor tools
+Morning lecture:
 
-1. Proteomics in Bioconductor
+1. Proteomics in R/Bioconductor
 2. How does mass spectrometry-based proteomics work?
 3. Quantitative proteomics
 4. Quantitative proteomics data processing and analysis
+
+Afternoon lab:
+
+- Manipulating MS data (raw and identification data)
+- Manipulating quantitative proteomics data
+- Data processing and DE
 
 ---
 class: middle center
@@ -358,7 +364,14 @@ class: middle center
 
 ### Labelled MS2: Isobaric tagging
 
+.left-col-30[
+![](./Figures/itraqchem.png)
+]
+
+
+.right-col-70[
 ![](./Figures/itraq.png)
+]
 
 ???
 
@@ -381,8 +394,7 @@ class: middle center
 ]
 
 
-
-Credit: [Johannes Rainer](https://github.com/jotsetung/)
+Credit: [Johannes Rainer](https://github.com/jorainer)
 
 ???
 
@@ -435,7 +447,7 @@ class: middle
 knitr::include_graphics("./Figures/msnset.png")
 ```
 
-The MSnSet structure: expression (accessed with `exprs`), feature
+The `MSnSet` structure: expression (accessed with `exprs`), feature
 (`fData`) and sample (`pData`) metadata.
 
 
@@ -621,8 +633,8 @@ name: laurent-gatto
 .rigth-col-50[
 
 **Acknowledgements** [Sebastian Gibb](https://github.com/sgibb) and
-[Johannes Rainer](https://github.com/jorainer) (software development)
-
+[Johannes Rainer](https://github.com/jorainer) (`MSnbase` and *R for
+Mass Spectrometry*)
 
 Open PhD or post-doc position available at the de Duve Institute,
 UCLouvain, in Brussels. (For international candidates only).
