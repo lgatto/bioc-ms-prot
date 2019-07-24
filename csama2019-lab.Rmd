@@ -375,6 +375,9 @@ used to filter the peptide-level data.
 (cptac <- cptac[fData(cptac)$Proteins %in% keep, ])
 ```
 
+**Exercise**: How many peptides have we lost by removing the proteins
+above?
+
 ## Filtering out contaminants and reverse hits
 
 Below, we create vector of logicals (and count) recording peptides
@@ -396,8 +399,8 @@ table(sel_rev <- fData(cptac)$Reverse != "+")
 (cptac <- cptac[sel_conts & sel_rev, ])
 ```
 
-Note how the filtering has been recorded in the object's processing
-log.
+You can keep track of the data processing steps in the object's
+processing log.
 
 ## Removing PTM-only proteins
 
@@ -540,7 +543,7 @@ associated with a protein group, as defined by the `Proteins` feature
 variable, and aggregate them using an summary function of choice.
 
 
-```{r featsfig2, fig.cap = "Examples of aggregation from PSMs, peptides to proteins using median aggregation.", echo = FALSE}
+```{r featsfig2, fig.cap = "Examples of aggregation from PSMs, peptides to proteins using median aggregation (from the [`Features`](https://rformassspectrometry.github.io/Features/articles/Features.html) package).", echo = FALSE}
 knitr::include_graphics("./Figures/features.png")
 ```
 
