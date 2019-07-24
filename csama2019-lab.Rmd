@@ -32,7 +32,7 @@ library("tidyverse")
 ```
 
 Sections 2 to 4 deal with raw mass spectrometry and identification
-data stemming from the open community-developed data formats (see
+data stored in one of the open community-developed data formats (see
 below). Section 5 describes how to produce or import quantitative data
 and the sections thereafter focus on the processing and analysis of
 differentially expressed proteins.
@@ -46,20 +46,24 @@ sections.
 ```{r datatab, results='asis', echo=FALSE}
 datatab <-
     data.frame(Type = c("raw", "identification", "quantitation",
-                   "peak lists", "quant and id", "protein db"),
+                   "peak lists", "quantitation (with id)", "protein db"),
                Format = c("mzML, mzXML, netCDF, mzData",
-                   "mzIdentML", "mzQuantML", "mgf", "mzTab", "fasta"),
+                   "mzIdentML", "mzQuantML", "mgf", "mzTab, spreadsheets", "fasta"),
                Package = c(
                    "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read and write in version >= 2.3.13) via *[mzR](http://bioconductor.org/packages/mzR)*",
                    paste("*[mzID](http://bioconductor.org/packages/mzID)* (read) and",
                          "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read, via *[mzR](http://bioconductor.org/packages/mzR)*)"),
                    "",
                    "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read)",
-                   "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read)",
+                   "*[MSnbase](http://bioconductor.org/packages/MSnbase)* (read, read/write)",
                    "*[Biostrings](http://bioconductor.org/packages/Biostrings)*"))
 
 knitr::kable(datatab)
 ```
+
+In the next sections, we will use raw data (in `mzML` and `mzXML`
+format), identification data (in `mzIdentML` format) and quantitative
+data (from a tab-separated spreadsheet).
 
 # Raw MS data
 
@@ -93,6 +97,12 @@ An `MSnExp` object contains
 **Exercise**: Extract the first, second and tenth spectrum. What are
 their MS levels, precursor m/z and retention times?
 
+<details>
+```{r ex0}
+rw3[[1]]
+```
+</details>
+
 We can also access specific data for the whole experiment using
 accessors:
 
@@ -106,10 +116,16 @@ See `?MSnExp` for details.
 
 
 **Exercise**: Using `msLevel`, extract the MS level of the
-`length(rw3)` spectra of the `rw3` file. What levels are available in
-these data. Using `centroided`, check what spectra and centroided of
-in profile mode. Which are the levels that are centroided or in
-profile mode.
+`r length(rw3)` spectra of the `rw3` file. What levels are available in these
+data. Using `centroided`, check what spectra and centroided of in
+profile mode (see figure below). Which are the levels that are
+centroided or in profile mode.
+
+
+```{r centroided, fig.cap = "Raw profile mode data (left) as measured by the mass spectrometre, and processed, centroided data (right).", echo = FALSE}
+knitr::include_graphics("./Figures/centroided.png")
+```
+
 
 <details>
 
