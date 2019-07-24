@@ -122,7 +122,7 @@ profile mode (see figure below). Which are the levels that are
 centroided or in profile mode.
 
 
-```{r centroided, fig.cap = "Raw profile mode data (left) as measured by the mass spectrometre, and processed, centroided data (right).", echo = FALSE}
+```{r centroided, fig.cap = "Peak picking. Raw profile mode data (left) as measured by the mass spectrometre, and processed, centroided data (right). See also this [`MSnbase` vignette](http://lgatto.github.io/MSnbase/articles/v03-MSnbase-centroiding.html).", echo = FALSE}
 knitr::include_graphics("./Figures/centroided.png")
 ```
 
@@ -244,7 +244,7 @@ Below, we plot the first MS2 spectrum from the `itraqdata` test data,
 highlighting the four iTRAQ reporter ions and extract the quantiation
 values and feature metadata of that same first record.
 
-```{r qvis, fig.cap = "Raw data and quantiative results"}
+```{r qvis, fig.cap = "An iTRAQ spectrum. The full spectrum is the composite of the peptide from all samples and is used for identification. The reporter ion peaks are specific to each sample and are used for quantitation. "}
 plot(itraqdata[[1]], reporters = iTRAQ4, full = TRUE)
 exprs(msnset)[1, ]
 fData(msnset)[1, ]
@@ -459,7 +459,7 @@ The following figure the proportions of features (peptides in this
 case) with respect to their completeness (blue) and the percentage of
 missing data in the full dataset (red).
 
-```{r plotNA}
+```{r plotNA, fig.cap = "Data completeness."}
 plotNA(cptac)
 ```
 
@@ -486,7 +486,10 @@ filterNA(cptac)
 - perform **imputation**, considering the underlying nature of
   missingness, i.e missing not at random (left-censored) or at random.
 
-![Root-mean-square error (RMSE) observations standard deviation ratio (RSR), KNN and MinDet imputation. Lower (blue) is better.](./Figures/imp-sim.png)
+
+```{r lazar, fig.cap = "Effect of the nature of missing values on their imputation. Root-mean-square error (RMSE) observations standard deviation ratio (RSR), KNN and MinDet imputation. Lower (blue) is better.", echo = FALSE}
+knitr::include_graphics("./Figures/imp-sim.png")
+```
 
 See Lazar *et al.* [Accounting for the Multiple Natures of Missing
 Values in Label-Free Quantitative Proteomics Data Sets to Compare
@@ -543,7 +546,7 @@ associated with a protein group, as defined by the `Proteins` feature
 variable, and aggregate them using an summary function of choice.
 
 
-```{r featsfig2, fig.cap = "Examples of aggregation from PSMs, peptides to proteins using median aggregation (from the [`Features`](https://rformassspectrometry.github.io/Features/articles/Features.html) package).", echo = FALSE}
+```{r featsfig2, fig.cap = "Multiple levels of summarisation. Examples of aggregation from PSMs, peptides to proteins using median aggregation (from the [`Features`](https://rformassspectrometry.github.io/Features/articles/Features.html) package).", echo = FALSE}
 knitr::include_graphics("./Figures/features.png")
 ```
 
@@ -768,8 +771,11 @@ fData(cptac_prot)$res %>%
 
 # Further reading
 
-- A version with additional material of this lab is available
-  [here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html).
+- For additional material on `MSnbase` and MS/proteomics data
+  manipualation, see
+  [here](https://rawgit.com/lgatto/bioc-ms-prot/master/lab.html) and
+  the [main `MSnbase`
+  vignette](http://lgatto.github.io/MSnbase/articles/v01-MSnbase-demo.html).
 
 - For additional `MSqRob` material, please see
   [here](https://statomics.github.io/pda/)
