@@ -585,7 +585,7 @@ al. (2019)](https://www.biorxiv.org/content/10.1101/668863v1.full).
 ---
 class: middle 
 
-### Two stage differential analysis
+### Differential analysis
 
 1. Aggregate normalised peptide intensities of a protein using robust
    regression with M-estimation using Huber weights: 
@@ -599,6 +599,26 @@ class: middle
 Sticker *et al.* 2019, *Robust summarization and inference in
 proteome-wide label-free quantification*,
 [https://doi.org/10.1101/668863](https://doi.org/10.1101/668863).
+
+
+???
+
+1. We aggregate all normalised peptide intensities of a protein using
+robust regression with M-estimation using Huber weights. We consider
+the protein-wise linear model in eq (1) with
+`\(y_{sp}\)` the normalised log2-transformed intensity of peptide `\(p\)` in sample `\(s\)`
+and `\(\beta^{pep}_p\)` the effect of peptide `\(p\)`. By encoding the peptide effect as 
+a sum contrast, `\(\beta^{sample}_s\)` be interpreted as the mean intensity in sample 
+`\(s\)` for this protein. The error term `\(\epsilon_{sp}\)` is assumed to be normally
+distributed with mean 0 and variance `\(\sigma^{2}_{pep}\)`.
+ 
+2. We perform the inference on protein intensities
+with the reduced model in eq (2) with `\(y_{ts}\)` the summarised
+log2-transformed protein intensity in sample `\(s\)` of treatment `\(t\)`, 
+`\(\beta_0\)` the intercept, and `\(\beta^{treatment}_t\)`, the effect condition `\(t\)`. 
+Again, the error term `\(\epsilon_{ts}\)` is assumed to be normally distributed 
+with mean 0 and variance `\(\sigma_2\)`. We correct for multiple testing using 
+the Benjamini-Hochberg FDR procedure.
 
 ---
 class: middle 
