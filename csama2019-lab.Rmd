@@ -588,6 +588,17 @@ be used. As an exercice, you are advised to use the best of the
 median- or robust-summerised data and compare your results with those
 shown below.
 
+```{r which_prot, echo = FALSE}
+## use median for questions by default
+## use robust for solution
+CACHE <- TRUE
+sol <- FALSE
+if (sol) {
+    cptac_prot <- cptac_rob
+    CACHE <- FALSE ## set to FALSE to force recalculations
+}
+```
+
 ## Estimation
 
 `MSqRob` is currently working with a format where we have one
@@ -595,7 +606,7 @@ dataframe for each protein.  This will be changed in the next release
 to use the `MSnSet` directly. Therefore we first have to reorganise
 the data.
 
-```{r dfprot, cache = TRUE}
+```{r dfprot, cache = CACHE}
 protMSqRob <- MSnSet2protdata(cptac_prot, "Proteins")
 ```
 
@@ -616,7 +627,7 @@ to `FALSE` - this functionality will be removed from the package in
 the next release.
 
 
-```{r models, cache = TRUE}
+```{r models, cache = CACHE}
 models <- fit.model(protdata = protMSqRob,
                     response = "quant_value",
                     fixed = "condition",
